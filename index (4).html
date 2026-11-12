@@ -1,0 +1,1120 @@
+<!doctype html>
+<html lang="bn">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="data:," />
+    <title>জয়নাবের ঘুমের গেম</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      :root{
+        color-scheme: dark;
+        --bg:#150f31;
+        --bg2:#1f1650;
+        --card:#2b1e63;
+        --card2:#372a78;
+        --ink:#f6f1ff;
+        --soft:#cfc4f5;
+        --pink:#ff7eb6;
+        --pink-d:#e7549a;
+        --gold:#ffd94d;
+        --mint:#7dffcb;
+        --sky:#8fd8ff;
+        --danger:#ff6b6b;
+        --line:#4a389a;
+      }
+      *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+      html,body{margin:0;padding:0}
+      body{
+        font-family:"Baloo Da 2","Hind Siliguri",system-ui,sans-serif;
+        background:
+          radial-gradient(1200px 600px at 85% -10%, #3a2a7d 0%, transparent 55%),
+          radial-gradient(900px 500px at -10% 30%, #2a1c66 0%, transparent 50%),
+          linear-gradient(180deg,var(--bg2),var(--bg));
+        color:var(--ink);
+        min-height:100vh;
+        overflow-x:hidden;
+      }
+      .stars{position:fixed;inset:0;pointer-events:none;z-index:0}
+      .stars i{position:absolute;background:#fff;border-radius:50%;opacity:.7;animation:tw 2.6s ease-in-out infinite}
+      @keyframes tw{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:.95;transform:scale(1.25)}}
+      .wrap{position:relative;z-index:1;max-width:600px;margin:0 auto;padding:14px 14px 40px}
+      .hidden{display:none !important}
+
+      h1{font-size:clamp(30px,8vw,44px);line-height:1.15;margin:6px 0 4px;font-weight:800;text-align:center}
+      h2{font-size:clamp(21px,5.6vw,27px);margin:0 0 6px;font-weight:800}
+      p{margin:0}
+      .sub{text-align:center;color:var(--soft);font-size:17px;font-weight:600}
+
+      .cover{width:100%;border-radius:20px;display:block;border:3px solid var(--line);box-shadow:0 14px 34px rgba(0,0,0,.45);margin-top:12px}
+      .card{background:linear-gradient(180deg,var(--card2),var(--card));border:2px solid var(--line);border-radius:20px;padding:16px;margin-top:14px;box-shadow:0 10px 24px rgba(0,0,0,.3)}
+      .card h2{text-align:center}
+
+      .btn{
+        font-family:inherit;font-weight:800;border:none;cursor:pointer;color:#fff;
+        background:linear-gradient(180deg,var(--pink),var(--pink-d));
+        border-radius:999px;padding:14px 26px;font-size:21px;
+        box-shadow:0 6px 0 #b93a7c,0 12px 22px rgba(0,0,0,.35);
+        transition:transform .08s, box-shadow .08s, filter .15s;
+        display:inline-flex;align-items:center;gap:8px;justify-content:center;
+      }
+      .btn:active{transform:translateY(4px);box-shadow:0 2px 0 #b93a7c}
+      .btn:disabled{filter:grayscale(.7) brightness(.75);cursor:not-allowed;box-shadow:0 4px 0 #6b5a8f}
+      .btn.big{font-size:24px;padding:16px 34px;width:100%}
+      .btn.gold{background:linear-gradient(180deg,#ffd94d,#f0a832);color:#5b3a00;box-shadow:0 6px 0 #b97e14,0 12px 22px rgba(0,0,0,.35)}
+      .btn.gold:active{box-shadow:0 2px 0 #b97e14}
+      .btn.sky{background:linear-gradient(180deg,#57b6f2,#2f7fd0);box-shadow:0 6px 0 #1f5b99,0 12px 22px rgba(0,0,0,.35)}
+      .btn.sky:active{box-shadow:0 2px 0 #1f5b99}
+      .center{text-align:center}
+
+      .girlStage{display:flex;flex-direction:column;align-items:center;gap:4px}
+      .girlStage svg{width:150px;height:180px}
+      .girlName{font-size:24px;font-weight:800;color:var(--gold)}
+      .optLabel{font-weight:800;color:var(--soft);margin:12px 0 6px;font-size:16px;text-align:center}
+      .swatches{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+      .sw{width:44px;height:44px;border-radius:50%;border:3px solid rgba(255,255,255,.35);cursor:pointer;padding:0;transition:transform .1s}
+      .sw.sel{border-color:#fff;transform:scale(1.18);box-shadow:0 0 0 3px var(--gold)}
+      .chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+      .chip{font-family:inherit;font-size:17px;font-weight:800;padding:9px 16px;border-radius:999px;border:2px solid var(--line);background:#241a55;color:var(--soft);cursor:pointer}
+      .chip.sel{background:var(--gold);color:#4d3200;border-color:var(--gold)}
+      .countChips .chip{font-size:20px;min-width:52px}
+
+      .playersRow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+      .pMini{display:flex;flex-direction:column;align-items:center;width:76px;background:#241a55;border:2px solid var(--line);border-radius:14px;padding:6px 2px}
+      .pMini svg{width:44px;height:54px}
+      .pMini span{font-size:13px;font-weight:700;line-height:1.1;text-align:center}
+      .pMini.you{border-color:var(--gold);background:#3a2c14}
+
+      .hud{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
+      .topBar{position:sticky;top:8px;z-index:9;display:flex;flex-direction:column;gap:8px;align-items:center}
+      .faceStrip{display:flex;gap:8px;justify-content:center;background:rgba(24,16,60,.92);border:2px solid var(--line);border-radius:999px;padding:6px 10px;max-width:100%}
+      .faceBtn{position:relative;width:50px;height:50px;border-radius:50%;border:3px solid var(--line);background:#372a78;padding:0;cursor:pointer;flex:none}
+      .faceBtn .crop{width:100%;height:100%;border-radius:50%;overflow:hidden;display:block}
+      .faceBtn .crop svg{width:100%;height:100%;display:block}
+      .faceBtn.viewing{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold),0 0 14px rgba(255,217,77,.65)}
+      .faceBtn.underAttack{border-color:var(--danger);animation:pulse .5s ease-in-out infinite}
+      .faceBtn.isOut .crop{filter:grayscale(1) brightness(.55)}
+      .faceX{position:absolute;inset:-7px;pointer-events:none}
+      .faceX svg{width:100%;height:100%;display:block}
+      .viewBanner{display:flex;align-items:center;gap:10px;background:#241a55;border:2px solid var(--gold);border-radius:14px;padding:8px 12px;margin-top:10px;font-weight:800;font-size:16.5px;line-height:1.3}
+      .viewBanner svg{width:34px;height:40px;flex:none}
+      .viewBanner small{color:var(--soft);font-weight:700}
+      .ghostIn{position:absolute;top:70px;right:22px;width:82px;z-index:5;filter:drop-shadow(0 8px 14px rgba(0,0,0,.5))}
+      .ghostIn svg{width:100%;height:auto;display:block}
+      .outBadge{display:inline-block;background:var(--danger);color:#fff;font-weight:800;font-size:13.5px;border-radius:999px;padding:1px 10px;margin-left:8px}
+      .outAv{filter:grayscale(1) brightness(.6)}
+      .fCard.outP{opacity:.8}
+      .fCard.outP>svg{filter:grayscale(1)}
+      .hud .pill{background:rgba(24,16,60,.92);border:2px solid var(--line);border-radius:999px;padding:7px 14px;font-weight:800;font-size:17px;display:flex;align-items:center;gap:6px}
+      .hud .pill b{color:var(--gold);font-size:19px}
+      .iconBtn{background:rgba(24,16,60,.92);border:2px solid var(--line);border-radius:999px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+      .iconBtn svg{width:22px;height:22px;fill:var(--soft)}
+
+      .countBig{font-size:92px;font-weight:800;text-align:center;line-height:1;color:var(--gold);text-shadow:0 6px 0 rgba(0,0,0,.3);animation:pulse 1s ease-in-out infinite}
+      @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+      .doors{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+      @media (max-width:480px){.doors{grid-template-columns:repeat(3,1fr)}}
+      .door{
+        font-family:inherit;position:relative;border:3px solid #6b4a2a;border-radius:12px 12px 6px 6px;
+        background:linear-gradient(180deg,#a9743f,#8a5a2e);color:#fff;cursor:pointer;
+        padding:12px 4px 10px;min-height:118px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;
+        transition:transform .1s, filter .15s;
+      }
+      .door::before{content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);width:55%;height:34px;background:#7c5027;border-radius:6px;border:2px solid #6b4a2a}
+      .door::after{content:"";position:absolute;right:9px;top:56%;width:10px;height:10px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 2px #6b4a2a}
+      .door .dnum{font-weight:800;font-size:17px;background:rgba(0,0,0,.35);padding:1px 10px;border-radius:999px;z-index:1}
+      .door .who{font-size:12.5px;font-weight:700;min-height:16px;z-index:1;text-align:center;line-height:1.15}
+      .door:hover{filter:brightness(1.1)}
+      .door.taken{cursor:default;filter:saturate(.55) brightness(.85)}
+      .door.mine{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold),0 0 22px rgba(255,217,77,.55);background:linear-gradient(180deg,#c98a45,#a06a30)}
+      .door svg{width:34px;height:40px;z-index:1}
+    </style>
+  </head>
+    <style>
+      .room{position:relative;background:linear-gradient(180deg,#241a55 0%,#2e2169 62%,#3a2a63 62.2%,#4a3566 100%);border:3px solid var(--line);border-radius:20px;overflow:hidden;min-height:400px;margin-top:12px}
+      .window{position:absolute;top:16px;left:16px;width:104px;height:118px;background:linear-gradient(180deg,#131a4a,#1d2f6e);border:5px solid #6b4a2a;border-radius:10px;overflow:hidden}
+      .window::before,.window::after{content:"";position:absolute;background:#6b4a2a;z-index:2}
+      .window::before{left:50%;top:0;width:4px;height:100%;transform:translateX(-50%)}
+      .window::after{top:50%;left:0;height:4px;width:100%;transform:translateY(-50%)}
+      .moon{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;background:#ffe9a3;box-shadow:0 0 18px #ffe9a3}
+      .moon::after{content:"";position:absolute;top:-4px;left:9px;width:30px;height:30px;border-radius:50%;background:#1d2f6e}
+      .wstar{position:absolute;background:#fff;border-radius:50%}
+      .roomDoor{position:absolute;top:56px;right:16px;width:92px;height:196px;background:linear-gradient(180deg,#a9743f,#8a5a2e);border:4px solid #6b4a2a;border-radius:12px 12px 4px 4px;transform-origin:50% 100%}
+      .roomDoor::before{content:"";position:absolute;top:14px;left:50%;transform:translateX(-50%);width:56%;height:56px;background:#7c5027;border:2px solid #6b4a2a;border-radius:6px}
+      .roomDoor::after{content:"";position:absolute;left:10px;top:52%;width:12px;height:12px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 2px #6b4a2a}
+      .roomDoor.knock{animation:knockA .32s ease-in-out infinite}
+      @keyframes knockA{0%,100%{transform:rotate(0)}25%{transform:rotate(-1.6deg)}75%{transform:rotate(1.6deg)}}
+      .knockTxt{position:absolute;top:22px;right:6px;font-weight:800;font-size:21px;color:var(--gold);transform:rotate(8deg);text-shadow:0 2px 0 rgba(0,0,0,.4);animation:pulse .5s infinite;z-index:5}
+      .bedsZone{position:absolute;left:0;right:0;bottom:8px;display:flex;gap:8px;padding:0 12px;flex-wrap:wrap;align-items:flex-end}
+      .bed{position:relative;flex:1 1 118px;max-width:172px;cursor:pointer;background:none;border:none;padding:0;font-family:inherit}
+      .bed svg{width:100%;height:auto;display:block}
+      .bed .bedTag{position:absolute;top:-4px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.45);color:#fff;font-size:12.5px;font-weight:800;padding:1px 9px;border-radius:999px;white-space:nowrap}
+      .zzz{position:absolute;font-weight:800;color:var(--sky);pointer-events:none;animation:zfloat 2.4s ease-in infinite;text-shadow:0 2px 6px rgba(0,0,0,.5)}
+      @keyframes zfloat{0%{transform:translateY(0) scale(.7) rotate(-6deg);opacity:0}25%{opacity:1}100%{transform:translateY(-64px) scale(1.25) rotate(8deg);opacity:0}}
+      .ghostAt{position:absolute;top:44px;right:106px;width:104px;z-index:4;cursor:pointer;filter:drop-shadow(0 8px 14px rgba(0,0,0,.5));background:none;border:none;padding:0}
+      .ghostAt:active{transform:scale(.92) rotate(-4deg)}
+      .ghostAt svg{width:100%;height:auto;display:block}
+      .bangWrap{position:absolute;top:8px;right:8px;left:8px;z-index:6;background:rgba(16,9,44,.88);border:2px solid var(--danger);border-radius:14px;padding:8px 12px}
+      .bangWrap .bName{font-weight:800;font-size:17px}
+      .bangBar{height:16px;background:#3c2a72;border-radius:999px;overflow:hidden;margin-top:5px;border:2px solid rgba(255,255,255,.25)}
+      .bangFill{height:100%;width:0%;background:linear-gradient(90deg,#ffb03a,var(--danger));border-radius:999px;transition:width .12s linear}
+      .roomMsg{position:absolute;left:50%;bottom:46%;transform:translateX(-50%);z-index:7;background:rgba(16,9,44,.92);border:2px solid var(--gold);color:#fff;font-weight:800;font-size:18px;padding:8px 16px;border-radius:18px;max-width:88%;text-align:center;line-height:1.35;box-shadow:0 8px 20px rgba(0,0,0,.4)}
+      .floatPt{position:absolute;font-weight:800;color:var(--gold);font-size:21px;pointer-events:none;animation:ptUp 1s ease-out forwards;text-shadow:0 2px 4px rgba(0,0,0,.55);z-index:6}
+      @keyframes ptUp{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(-52px);opacity:0}}
+      .nightProg{height:14px;background:#241a55;border:2px solid var(--line);border-radius:999px;overflow:hidden;margin-top:10px}
+      .nightFill{height:100%;width:0%;background:linear-gradient(90deg,#8fd8ff,#ffd94d);transition:width .5s linear}
+
+      .shopGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+      @media (max-width:480px){.shopGrid{grid-template-columns:1fr}}
+      .shopItem{background:#241a55;border:2px solid var(--line);border-radius:16px;padding:12px;display:flex;gap:12px;align-items:center}
+      .shopItem .ic{flex:none;width:58px;height:58px;border-radius:14px;background:#372a78;display:flex;align-items:center;justify-content:center}
+      .shopItem .ic svg{width:42px;height:42px}
+      .shopItem h3{margin:0;font-size:18px;font-weight:800;line-height:1.15}
+      .shopItem p{color:var(--soft);font-size:14px;font-weight:600;line-height:1.3}
+      .shopItem p b{color:var(--ink)}
+      .buyBtn{margin-top:7px;font-family:inherit;font-weight:800;font-size:16px;border:none;border-radius:999px;padding:8px 16px;background:linear-gradient(180deg,#ffd94d,#f0a832);color:#5b3a00;cursor:pointer;box-shadow:0 4px 0 #b97e14}
+      .buyBtn:active{transform:translateY(3px);box-shadow:0 1px 0 #b97e14}
+      .buyBtn:disabled{filter:grayscale(.8) brightness(.7);cursor:not-allowed;box-shadow:0 3px 0 #5a4a80}
+      .ownedTag{margin-top:7px;display:inline-block;font-weight:800;color:var(--mint);font-size:15px}
+
+      .friends{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:10px}
+      @media (max-width:480px){.friends{grid-template-columns:repeat(2,1fr)}}
+      .fCard{background:#241a55;border:2px solid var(--line);border-radius:14px;padding:8px;display:flex;gap:9px;align-items:center;position:relative;overflow:hidden;min-height:66px}
+      .fCard svg{width:40px;height:48px;flex:none}
+      .fCard .fn{font-weight:800;font-size:15.5px;line-height:1.1}
+      .fCard .fp{color:var(--gold);font-weight:800;font-size:15px}
+      .fCard .fs{color:var(--soft);font-size:12.5px;font-weight:700;line-height:1.25}
+      .fCard.you{border-color:var(--gold);background:#33270f}
+      .fCard.attacked{border-color:var(--danger);animation:knockA .32s ease-in-out infinite}
+      .fGhost{position:absolute;right:4px;top:2px;width:34px;pointer-events:none}
+
+      .rankRow{display:flex;align-items:center;gap:12px;background:#241a55;border:2px solid var(--line);border-radius:14px;padding:9px 13px;margin-top:9px}
+      .rankRow svg{width:40px;height:48px}
+      .rankRow .rk{font-size:23px;font-weight:800;width:40px;text-align:center}
+      .rankRow .rn{font-weight:800;font-size:18px;flex:1}
+      .rankRow .rp{font-weight:800;color:var(--gold);font-size:18px}
+      .rankRow.first{border-color:var(--gold);background:#3a2c14}
+      .trophyBox{text-align:center}
+      .trophyBox svg{width:74px;height:74px}
+      .trophyTxt{font-size:21px;font-weight:800;color:var(--gold)}
+      .confetti{position:fixed;top:-14px;z-index:50;pointer-events:none;border-radius:3px;animation:cfall linear forwards}
+      @keyframes cfall{to{transform:translateY(105vh) rotate(720deg)}}
+
+      .howList{margin:6px 0 0;padding-left:22px;font-size:16.5px;font-weight:600;color:var(--soft);line-height:1.55;text-align:left}
+      .howList b{color:var(--ink)}
+      .footNote{text-align:center;color:var(--soft);font-weight:600;font-size:14.5px;margin-top:16px}
+      .rowBtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+      .rowBtns .btn{flex:1;min-width:150px}
+      @media (prefers-reduced-motion: reduce){
+        .countBig,.knockTxt{animation:none}
+        .roomDoor.knock,.fCard.attacked{animation:none}
+        .zzz{animation-duration:5s}
+      }
+    </style>
+  <body>
+    <div class="stars" id="stars" aria-hidden="true"></div>
+    <div class="wrap">
+
+      <!-- ======= START SCREEN ======= -->
+      <section id="scrStart">
+        <h1>জয়নাবের ঘুমের গেম</h1>
+        <p class="sub">ঘর খোঁজো, ঘুমাও, পয়েন্ট জমাও — ভূত এলে তাড়িয়ে দাও!</p>
+        <img class="cover" src="assets/cover.webp" alt="একটা মেয়ে বিছানায় ঘুমাচ্ছে, দরজার কাছে দুটো মিষ্টি ভূত আর জানালায় চাঁদ" />
+
+        <div class="card">
+          <h2>তোমার মেয়েটাকে সাজাও</h2>
+          <div class="girlStage">
+            <div id="myGirl"></div>
+            <div class="girlName">জয়নাব</div>
+          </div>
+          <p class="optLabel">জামার রঙ বেছে নাও</p>
+          <div class="swatches" id="dressSw"></div>
+          <p class="optLabel">চুলের রঙ</p>
+          <div class="swatches" id="hairSw"></div>
+          <p class="optLabel">চুলের স্টাইল</p>
+          <div class="chips" id="hairStyleChips"></div>
+        </div>
+
+        <div class="card">
+          <h2>কয়জন খেলবে?</h2>
+          <div class="chips countChips" id="countChips"></div>
+          <div class="playersRow" id="playersRow"></div>
+        </div>
+
+        <div class="card">
+          <h2>কীভাবে খেলতে হয়?</h2>
+          <ul class="howList">
+            <li><b>ঘর খোঁজো:</b> ৩০ থেকে ১ গোনা শেষ হওয়ার আগেই একটা দরজায় টিপে তোমার ঘরটা নিয়ে নাও।</li>
+            <li><b>ঘুমাও:</b> বিছানায় ঘুমালেই প্রতি সেকেন্ডে পয়েন্ট বাড়বে — প্রথমে ১ করে, খাট কিনলে ২ করে, তারপর আরও বেশি!</li>
+            <li><b>খাট কেনো:</b> ২৫ পয়েন্টে ২য় খাট, ৫০-এ ৩য়, ১০০-এ ৪র্থ, ২০০-এ ৫ম — যত খাট, তত বেশি পয়েন্ট!</li>
+            <li><b>বন্দুক কেনো:</b> খেলনা বন্দুক পাওয়া যায় ৫, ৮, ১৫ আর ২৫ পয়েন্টে — বন্দুক থাকলে ভূত তাড়ানো সহজ!</li>
+            <li><b>ছবিতে টিপ দাও:</b> উপরে সবার ছবি থাকবে, নাম নয়। কোনো ছবিতে টিপ দিলে তার ঘরে গিয়ে দেখতে পারবে সে কেমন ঘুমাচ্ছে; নিজের ছবিতে টিপ দিলে নিজের ঘরে ফিরে আসবে।</li>
+            <li><b>ভূত সাবধান:</b> ৫ রকমের ভূত এসে দরজায় ধাক্কা দেবে। দরজা ভাঙার আগেই ভূতটাকে টিপে টিপে তাড়িয়ে দাও — ভূত ঢুকে পড়লেই কিন্তু সেই খেলোয়াড় <b>আউট</b>! তার ছবির উপর লাল কাটা (✕) পড়ে যাবে।</li>
+          </ul>
+        </div>
+
+        <div style="margin-top:16px">
+          <button class="btn big" id="btnPlay" type="button">খেলা শুরু করো</button>
+        </div>
+      </section>
+
+      <!-- ======= GAME SCREEN ======= -->
+      <section id="scrGame" class="hidden">
+        <div class="topBar">
+          <div class="faceStrip" id="faceStrip" aria-label="সব খেলোয়াড়ের ছবি"></div>
+          <div class="hud">
+            <div class="pill">রাত <b id="hudNight">১</b></div>
+            <div class="pill">পয়েন্ট <b id="hudPts">০</b></div>
+            <div class="pill">প্রতি সেকেন্ডে <b id="hudRate">+১</b></div>
+            <button class="iconBtn" id="btnSound" type="button" aria-label="শব্দ চালু বা বন্ধ"></button>
+          </div>
+        </div>
+
+        <div id="phaseSearch">
+          <h2 class="center" style="margin-top:14px">তাড়াতাড়ি! তোমার ঘরটা খুঁজে নাও!</h2>
+          <div class="countBig" id="countBig">৩০</div>
+          <p class="sub" id="searchMsg">একটা দরজায় টিপ দাও — ওটাই হবে তোমার ঘর</p>
+          <div class="doors" id="doors"></div>
+        </div>
+
+        <div id="phaseSleep" class="hidden">
+          <div class="nightProg" aria-hidden="true"><div class="nightFill" id="nightFill"></div></div>
+          <p class="sub" id="sleepMsg" style="margin-top:6px">চাঁদ আকাশে আছে… ঘুমাও আর পয়েন্ট জমাও!</p>
+          <div class="viewBanner hidden" id="viewBanner"></div>
+
+          <div class="room" id="room">
+            <div class="window" aria-hidden="true">
+              <div class="moon"></div>
+              <div class="wstar" style="top:16px;left:12px;width:4px;height:4px"></div>
+              <div class="wstar" style="top:44px;left:34px;width:3px;height:3px"></div>
+              <div class="wstar" style="top:78px;left:14px;width:3px;height:3px"></div>
+              <div class="wstar" style="top:92px;left:66px;width:4px;height:4px"></div>
+            </div>
+            <div class="roomDoor" id="roomDoor"></div>
+            <div class="knockTxt hidden" id="knockTxt">ধুম! ধুম!</div>
+            <div class="bangWrap hidden" id="bangWrap">
+              <div class="bName" id="bangName">ভূত দরজায় ধাক্কা দিচ্ছে!</div>
+              <div class="bangBar"><div class="bangFill" id="bangFill"></div></div>
+            </div>
+            <div id="ghostSlot"></div>
+            <div class="bedsZone" id="bedsZone"></div>
+            <div class="roomMsg hidden" id="roomMsg"></div>
+          </div>
+
+          <div class="card" id="shopCard">
+            <h2>দোকান</h2>
+            <div class="shopGrid">
+              <div class="shopItem">
+                <div class="ic" id="bedIcon"></div>
+                <div>
+                  <h3>আরেকটা খাট</h3>
+                  <p>খাট কিনলে প্রতি সেকেন্ডে আরও ১ পয়েন্ট বেশি পাবে। এখন খাট: <b id="bedCountTxt">১</b>টা</p>
+                  <button class="buyBtn" id="btnBuyBed" type="button">কেনো</button>
+                </div>
+              </div>
+              <div class="shopItem">
+                <div class="ic" id="gunIcon"></div>
+                <div>
+                  <h3 id="gunName">খেলনা বন্দুক</h3>
+                  <p id="gunDesc">বন্দুক থাকলে ভূত তাড়াতে কম টিপ লাগবে।</p>
+                  <button class="buyBtn" id="btnBuyGun" type="button">কেনো</button>
+                  <span class="ownedTag hidden" id="gunOwned">সবচেয়ে শক্তিশালী বন্দুক তোমার কাছে আছে!</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>সবাই কেমন ঘুমাচ্ছে?</h2>
+            <div class="friends" id="friends"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======= MORNING / RESULTS ======= -->
+      <section id="scrEnd" class="hidden">
+        <h1 style="margin-top:10px" id="endTitle">সকাল হয়ে গেছে!</h1>
+        <div class="trophyBox" id="trophyBox"></div>
+        <p class="sub" id="endMsg"></p>
+        <div class="card">
+          <h2>কে সবচেয়ে বেশি পয়েন্ট জমালো?</h2>
+          <div id="rankList"></div>
+        </div>
+        <div class="rowBtns">
+          <button class="btn gold" id="btnNextNight" type="button">পরের রাত</button>
+          <button class="btn sky" id="btnRestart" type="button">প্রথম থেকে খেলো</button>
+        </div>
+        <p class="footNote">পরের রাতে ভূতগুলো আরও জোরে দরজা ধাক্কা দেবে!</p>
+      </section>
+
+    </div>
+
+    <script>
+    "use strict";
+    var BN = "০১২৩৪৫৬৭৮৯";
+    function bn(n){ return String(n).replace(/[0-9]/g, function(d){ return BN[+d]; }); }
+    function $(id){ return document.getElementById(id); }
+    function rnd(a,b){ return a + Math.random()*(b-a); }
+    function ri(a,b){ return Math.floor(rnd(a,b+1)); }
+    function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+    /* ---------- SVG builders ---------- */
+    function girlSVG(look, sleeping){
+      var skin = look.skin, hair = look.hairColor, dress = look.dress, style = look.hairStyle;
+      var hairBack = "";
+      if(style === "beni"){
+        hairBack = '<path d="M22 34 q-6 26 2 44 l9 -3 q-5 -22 -3 -38 z" fill="'+hair+'"/>'
+                 + '<path d="M78 34 q6 26 -2 44 l-9 -3 q5 -22 3 -38 z" fill="'+hair+'"/>'
+                 + '<circle cx="26" cy="78" r="4" fill="#ff7eb6"/><circle cx="74" cy="78" r="4" fill="#ff7eb6"/>';
+      } else if(style === "khola"){
+        hairBack = '<path d="M50 8 q30 2 29 34 q0 30 -6 44 l-11 -4 q4 -24 2 -40 z" fill="'+hair+'"/>'
+                 + '<path d="M50 8 q-30 2 -29 34 q0 30 6 44 l11 -4 q-4 -24 -2 -40 z" fill="'+hair+'"/>';
+      } else { /* jhuti */
+        hairBack = '<circle cx="50" cy="9" r="11" fill="'+hair+'"/><circle cx="50" cy="9" r="4.5" fill="#ffd94d"/>';
+      }
+      var eyes = sleeping
+        ? '<path d="M36 46 q5 4 10 0" stroke="#5b3a29" stroke-width="2.4" fill="none" stroke-linecap="round"/>'
+          + '<path d="M54 46 q5 4 10 0" stroke="#5b3a29" stroke-width="2.4" fill="none" stroke-linecap="round"/>'
+        : '<circle cx="41" cy="45" r="3.2" fill="#33231c"/><circle cx="59" cy="45" r="3.2" fill="#33231c"/>'
+          + '<circle cx="42.2" cy="43.8" r="1.1" fill="#fff"/><circle cx="60.2" cy="43.8" r="1.1" fill="#fff"/>';
+      var mouth = sleeping
+        ? '<path d="M45 57 q5 3 10 0" stroke="#b3546e" stroke-width="2.2" fill="none" stroke-linecap="round"/>'
+        : '<path d="M43 55 q7 6 14 0" stroke="#b3546e" stroke-width="2.4" fill="none" stroke-linecap="round"/>';
+      return '<svg viewBox="0 0 100 118" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+        + hairBack
+        + '<path d="M50 62 L26 112 q-1 6 6 6 l36 0 q7 0 6 -6 L50 62z" fill="'+dress+'"/>'
+        + '<path d="M50 62 L38 84 l24 0 z" fill="rgba(255,255,255,.35)"/>'
+        + '<path d="M28 78 q-9 8 -7 18 l8 1 q0 -9 5 -14z" fill="'+skin+'"/>'
+        + '<path d="M72 78 q9 8 7 18 l-8 1 q0 -9 -5 -14z" fill="'+skin+'"/>'
+        + '<circle cx="50" cy="42" r="24" fill="'+skin+'"/>'
+        + '<path d="M26 40 a24 24 0 0 1 48 0 l0 -6 a24 15 0 0 0 -48 0z" fill="'+hair+'"/>'
+        + '<ellipse cx="33" cy="52" rx="4.6" ry="3" fill="#ffb3c2" opacity=".8"/>'
+        + '<ellipse cx="67" cy="52" rx="4.6" ry="3" fill="#ffb3c2" opacity=".8"/>'
+        + eyes + mouth
+        + '</svg>';
+    }
+
+    function bedSVG(look, empty){
+      var girl = empty ? ""
+        : '<circle cx="42" cy="38" r="13" fill="'+look.skin+'"/>'
+        + '<path d="M29 38 a13 13 0 0 1 26 0 l0 -3 a13 8 0 0 0 -26 0z" fill="'+look.hairColor+'"/>'
+        + '<path d="M36 41 q3 3 6 0" stroke="#5b3a29" stroke-width="1.8" fill="none" stroke-linecap="round"/>'
+        + '<path d="M46 41 q3 3 6 0" stroke="#5b3a29" stroke-width="1.8" fill="none" stroke-linecap="round"/>';
+      return '<svg viewBox="0 0 160 92" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+        + '<rect x="4" y="18" width="10" height="62" rx="4" fill="#8a5a2e"/>'
+        + '<rect x="146" y="34" width="10" height="46" rx="4" fill="#8a5a2e"/>'
+        + '<rect x="4" y="52" width="152" height="12" rx="5" fill="#a9743f"/>'
+        + '<rect x="14" y="40" width="132" height="16" rx="7" fill="#fdf6ec"/>'
+        + '<rect x="18" y="34" width="42" height="18" rx="8" fill="#fff"/>'
+        + girl
+        + '<path d="M52 26 l150 0" stroke="none"/>'
+        + '<path d="M55 44 q45 -8 95 2 l0 12 q-50 -8 -95 -2z" fill="'+look.dress+'"/>'
+        + '<circle cx="86" cy="48" r="3" fill="rgba(255,255,255,.55)"/><circle cx="112" cy="50" r="2.4" fill="rgba(255,255,255,.55)"/><circle cx="132" cy="47" r="3" fill="rgba(255,255,255,.55)"/>'
+        + '</svg>';
+    }
+
+    var GHOST_TYPES = [
+      { name:"সাদা ভূত",   body:"#f5f7ff", cheek:"#ffb3c2", fillSec:11,  extra:"" },
+      { name:"গোলাপি ভূত", body:"#ffc2dd", cheek:"#ff7eb6", fillSec:9.5, extra:'<circle cx="50" cy="10" r="7" fill="#ff7eb6"/><circle cx="50" cy="10" r="3" fill="#ffd94d"/>' },
+      { name:"নীল ভূত",    body:"#a8dcff", cheek:"#8fb8ff", fillSec:8.5, extra:'<path d="M38 14 l6 -9 6 7 6 -7 6 9 -4 5 -16 0z" fill="#ffd94d"/>' },
+      { name:"সবুজ ভূত",   body:"#b9f7c9", cheek:"#8fe6a8", fillSec:7.5, extra:'<path d="M30 20 q20 -14 40 0 l-5 -12 q-15 -8 -30 0z" fill="#57b6f2"/>' },
+      { name:"সোনালি ভূত", body:"#ffe066", cheek:"#ffb03a", fillSec:6.5, extra:'<path d="M50 2 l4 8 9 1 -6.5 6 1.8 9 -8.3 -4.6 -8.3 4.6 1.8 -9 -6.5 -6 9 -1z" fill="#ff9f1c"/>' }
+    ];
+    function ghostSVG(t){
+      return '<svg viewBox="0 0 100 108" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+        + '<path d="M50 8 q30 0 30 34 l0 52 q-7 -9 -13 0 q-7 -9 -13 0 q-7 -9 -13 0 q-7 -9 -13 0 q-7 -9 -8 0 l0 -52 q0 -34 30 -34z" fill="'+t.body+'"/>'
+        + t.extra
+        + '<circle cx="38" cy="46" r="4.4" fill="#2b2340"/><circle cx="62" cy="46" r="4.4" fill="#2b2340"/>'
+        + '<circle cx="39.5" cy="44.4" r="1.5" fill="#fff"/><circle cx="63.5" cy="44.4" r="1.5" fill="#fff"/>'
+        + '<ellipse cx="50" cy="60" rx="6.5" ry="8" fill="#2b2340"/>'
+        + '<ellipse cx="29" cy="58" rx="5.5" ry="3.6" fill="'+t.cheek+'" opacity=".85"/>'
+        + '<ellipse cx="71" cy="58" rx="5.5" ry="3.6" fill="'+t.cheek+'" opacity=".85"/>'
+        + '</svg>';
+    }
+
+    function gunSVG(color, star){
+      var s = '<svg viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+        + '<rect x="8" y="22" width="62" height="17" rx="8" fill="'+color+'"/>'
+        + '<rect x="62" y="26" width="17" height="9" rx="4" fill="#5b4a8a"/>'
+        + '<path d="M22 39 l6 22 q1 5 6 4 l9 -1 q5 -1 3 -6 l-5 -19z" fill="'+color+'"/>'
+        + '<rect x="14" y="12" width="20" height="11" rx="5" fill="'+color+'" opacity=".75"/>'
+        + '<circle cx="46" cy="30" r="5" fill="#fff" opacity=".65"/>';
+      if(star){ s += '<path d="M88 8 l2.6 5.6 6 .7 -4.4 4.1 1.2 5.9 -5.4 -3 -5.4 3 1.2 -5.9 -4.4 -4.1 6 -.7z" fill="#ffd94d"/>'; }
+      return s + '</svg>';
+    }
+    function bedIconSVG(){
+      return '<svg viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+        + '<rect x="4" y="14" width="8" height="44" rx="3" fill="#8a5a2e"/><rect x="88" y="26" width="8" height="32" rx="3" fill="#8a5a2e"/>'
+        + '<rect x="4" y="42" width="92" height="9" rx="4" fill="#a9743f"/><rect x="12" y="32" width="76" height="12" rx="6" fill="#fdf6ec"/>'
+        + '<rect x="14" y="27" width="26" height="12" rx="6" fill="#fff"/><path d="M36 33 q22 -5 52 1 l0 8 q-30 -5 -52 -1z" fill="#ff7eb6"/></svg>';
+    }
+    var SOUND_ON = '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16 8.8a4.5 4.5 0 0 1 0 6.4l-1.2-1.2a2.8 2.8 0 0 0 0-4z"/><path d="M16 5.5a8 8 0 0 1 0 13l-1.2-1.2a6.3 6.3 0 0 0 0-10.6z"/></svg>';
+    var SOUND_OFF = '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16.6 9.6l5 5-1.4 1.4-5-5-5 5L8.8 14.6l5-5-5-5L10.2 3.2l5 5 5-5 1.4 1.4-5 5z" transform="translate(1.5 3) scale(.82)"/></svg>';
+    var TROPHY = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M28 12 h44 v10 q0 22 -22 22 q-22 0 -22 -22z" fill="#ffd94d"/><path d="M28 18 q-16 -2 -14 10 q1 11 16 12 l0 -8 q-9 0 -9.6 -5 q-.5 -4.6 7.6 -4.4z" fill="#f0a832"/><path d="M72 18 q16 -2 14 10 q-1 11 -16 12 l0 -8 q9 0 9.6 -5 q.5 -4.6 -7.6 -4.4z" fill="#f0a832"/><rect x="44" y="44" width="12" height="14" fill="#f0a832"/><rect x="32" y="58" width="36" height="9" rx="3" fill="#ffd94d"/><rect x="26" y="67" width="48" height="10" rx="3" fill="#b97e14"/><path d="M50 20 l3.4 7 7.6 1 -5.5 5.3 1.3 7.6 -6.8 -3.6 -6.8 3.6 1.3 -7.6 -5.5 -5.3 7.6 -1z" fill="#fff3b0"/></svg>';
+
+    /* ---------- audio (synthesized, no files) ---------- */
+    var AC = null, muted = false;
+    function ac(){
+      if(!AC){ try{ AC = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ AC = null; } }
+      if(AC && AC.state === "suspended"){ AC.resume(); }
+      return AC;
+    }
+    function tone(freq, dur, type, vol, when, slideTo){
+      if(muted) return; var c = ac(); if(!c) return;
+      var t = c.currentTime + (when || 0);
+      var o = c.createOscillator(), g = c.createGain();
+      o.type = type || "sine"; o.frequency.setValueAtTime(freq, t);
+      if(slideTo){ o.frequency.exponentialRampToValueAtTime(slideTo, t + dur); }
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol || 0.15, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(c.destination);
+      o.start(t); o.stop(t + dur + 0.05);
+    }
+    function sfxKnock(){ tone(95, .14, "sine", .5, 0, 55); tone(80, .12, "sine", .4, .16, 50); }
+    function sfxPop(){ tone(660, .09, "triangle", .18, 0, 990); }
+    function sfxZap(){ tone(880, .16, "sawtooth", .10, 0, 160); }
+    function sfxBuy(){ tone(523, .12, "triangle", .2); tone(784, .16, "triangle", .2, .1); }
+    function sfxScare(){ tone(392, .12, "square", .16); tone(330, .14, "square", .16, .1); tone(262, .22, "square", .16, .2); }
+    function sfxFlee(){ tone(523, .1, "sine", .15, 0, 1046); tone(784, .14, "sine", .13, .08, 1318); }
+    function sfxMorning(){ [523,659,784,1046].forEach(function(f,i){ tone(f, .22, "triangle", .18, i*.13); }); }
+
+    /* ---------- data ---------- */
+    var DRESSES = [
+      { name:"গোলাপি", c:"#ff7eb6" }, { name:"বেগুনি", c:"#9b6dff" }, { name:"নীল", c:"#4fa8e8" },
+      { name:"সবুজ", c:"#4ecb7d" }, { name:"হলুদ", c:"#f5b921" }, { name:"লাল", c:"#ef5350" }
+    ];
+    var HAIR_COLORS = [
+      { name:"কালো", c:"#2b2320" }, { name:"বাদামি", c:"#6b4226" }, { name:"সোনালি", c:"#d9a441" }, { name:"গোলাপি", c:"#e7549a" }
+    ];
+    var HAIR_STYLES = [
+      { id:"beni", name:"দুই বেণী" }, { id:"khola", name:"খোলা চুল" }, { id:"jhuti", name:"ঝুঁটি" }
+    ];
+    var FRIENDS = [
+      { name:"রিয়া",   look:{ skin:"#8d5a3b", hairColor:"#2b2320", hairStyle:"khola", dress:"#4fa8e8" } },
+      { name:"মিম",     look:{ skin:"#c68642", hairColor:"#6b4226", hairStyle:"jhuti", dress:"#4ecb7d" } },
+      { name:"সারা",    look:{ skin:"#f1c27d", hairColor:"#d9a441", hairStyle:"beni",  dress:"#f5b921" } },
+      { name:"নুসরাত",  look:{ skin:"#a06a35", hairColor:"#2b2320", hairStyle:"beni",  dress:"#9b6dff" } },
+      { name:"তানিয়া", look:{ skin:"#e8b08a", hairColor:"#6b4226", hairStyle:"khola", dress:"#ef5350" } }
+    ];
+    var GUNS = [
+      { name:"পানির বন্দুক",  price:5,  power:9,  color:"#57b6f2", star:false, desc:"ভূতের গায়ে পানি ছিটিয়ে দাও! টিপের শক্তি বাড়বে।" },
+      { name:"বুদবুদ বন্দুক", price:8,  power:17, color:"#ff9fd0", star:false, desc:"বুদবুদে ভূত ভেসে যাবে! আরও শক্তিশালী।" },
+      { name:"তারা বন্দুক",   price:15, power:27, color:"#ffd94d", star:true,  desc:"তারা ছুড়ে ভূতকে চমকে দাও! অনেক শক্তিশালী।" },
+      { name:"রংধনু বন্দুক",  price:25, power:40, color:"#b388ff", star:true,  desc:"সবচেয়ে শক্তিশালী বন্দুক — ভূত এক-দুই টিপেই পালাবে!" }
+    ];
+    var BED_PRICES = [25, 50, 100, 200, 400, 800];
+
+    var myLook = { skin:"#c68642", hairColor:"#2b2320", hairStyle:"beni", dress:"#9b6dff" };
+    var playerCount = 6;
+
+    /* ---------- start screen setup ---------- */
+    function buildStars(){
+      var box = $("stars"), html = "";
+      for(var i=0;i<42;i++){
+        html += '<i style="left:'+rnd(0,100)+'%;top:'+rnd(0,100)+'%;width:'+ri(2,4)+'px;height:'+ri(2,4)+'px;animation-delay:'+rnd(0,2.5)+'s"></i>';
+      }
+      box.innerHTML = html;
+    }
+    function renderMyGirl(){ $("myGirl").innerHTML = girlSVG(myLook, false); }
+    function renderPlayersRow(){
+      var row = $("playersRow"), html = "";
+      html += '<div class="pMini you">'+girlSVG(myLook,false)+'<span>জয়নাব<br>(তুমি)</span></div>';
+      for(var i=0;i<playerCount-1;i++){
+        html += '<div class="pMini">'+girlSVG(FRIENDS[i].look,false)+'<span>'+FRIENDS[i].name+'</span></div>';
+      }
+      row.innerHTML = html;
+    }
+    function buildStartControls(){
+      var ds = $("dressSw"); ds.innerHTML = "";
+      DRESSES.forEach(function(d){
+        var b = document.createElement("button");
+        b.type = "button"; b.className = "sw" + (myLook.dress === d.c ? " sel" : "");
+        b.style.background = d.c; b.setAttribute("aria-label", "জামার রঙ " + d.name);
+        b.addEventListener("click", function(){ myLook.dress = d.c; sfxPop(); buildStartControls(); renderMyGirl(); renderPlayersRow(); });
+        ds.appendChild(b);
+      });
+      var hs = $("hairSw"); hs.innerHTML = "";
+      HAIR_COLORS.forEach(function(h){
+        var b = document.createElement("button");
+        b.type = "button"; b.className = "sw" + (myLook.hairColor === h.c ? " sel" : "");
+        b.style.background = h.c; b.setAttribute("aria-label", "চুলের রঙ " + h.name);
+        b.addEventListener("click", function(){ myLook.hairColor = h.c; sfxPop(); buildStartControls(); renderMyGirl(); renderPlayersRow(); });
+        hs.appendChild(b);
+      });
+      var st = $("hairStyleChips"); st.innerHTML = "";
+      HAIR_STYLES.forEach(function(s){
+        var b = document.createElement("button");
+        b.type = "button"; b.className = "chip" + (myLook.hairStyle === s.id ? " sel" : "");
+        b.textContent = s.name;
+        b.addEventListener("click", function(){ myLook.hairStyle = s.id; sfxPop(); buildStartControls(); renderMyGirl(); renderPlayersRow(); });
+        st.appendChild(b);
+      });
+      var cc = $("countChips"); cc.innerHTML = "";
+      [2,3,4,5,6].forEach(function(n){
+        var b = document.createElement("button");
+        b.type = "button"; b.className = "chip" + (playerCount === n ? " sel" : "");
+        b.textContent = bn(n) + " জন";
+        b.addEventListener("click", function(){ playerCount = n; sfxPop(); buildStartControls(); renderPlayersRow(); });
+        cc.appendChild(b);
+      });
+    }
+
+    /* ---------- game state ---------- */
+    var G = null;
+    var timers = [];
+    function every(ms, fn){ var id = setInterval(fn, ms); timers.push(id); return id; }
+    function later(ms, fn){ var id = setTimeout(fn, ms); timers.push(id); return id; }
+    function clearTimers(){ timers.forEach(function(id){ clearInterval(id); clearTimeout(id); }); timers = []; }
+
+    function newPlayer(name, look, isYou){
+      return { name:name, look:look, you:!!isYou, pts:0, total:0, beds:1, gun:-1, pace:1,
+               room:-1, out:false, attacked:false, ghostType:null, bangPct:0, eatenBy:null, attackTimer:null };
+    }
+    function startGame(keepProgress){
+      clearTimers();
+      if(!keepProgress || !G){
+        var players = [ newPlayer("জয়নাব", myLook, true) ];
+        for(var i=0;i<playerCount-1;i++){
+          var bp = newPlayer(FRIENDS[i].name, FRIENDS[i].look, false);
+          bp.pace = Math.random() < 0.3 ? 2 : 1;
+          players.push(bp);
+        }
+        G = { night:1, players:players, phase:"search", myRoom:-1, ghost:null, friendGhost:null,
+              nightLen:75, nightLeft:75, over:false, viewIdx:0 };
+      } else {
+        G.night++;
+        G.players.forEach(function(p){ p.room = -1; p.out = false; p.attacked = false; p.ghostType = null; p.bangPct = 0; p.eatenBy = null; });
+        G.phase = "search"; G.myRoom = -1; G.ghost = null; G.friendGhost = null;
+        G.nightLeft = G.nightLen; G.over = false; G.viewIdx = 0;
+      }
+      $("scrStart").classList.add("hidden");
+      $("scrEnd").classList.add("hidden");
+      $("scrGame").classList.remove("hidden");
+      $("phaseSleep").classList.add("hidden");
+      $("phaseSearch").classList.remove("hidden");
+      updateHUD();
+      renderStrip();
+      startSearch();
+      window.scrollTo(0,0);
+    }
+    function me(){ return G.players[0]; }
+    function myRate(){ return me().beds; }
+    function nextBedPrice(){ var b = me().beds; return b - 1 < BED_PRICES.length ? BED_PRICES[b-1] : null; }
+    function tapPower(){ var g = me().gun; return 14 + (g >= 0 ? GUNS[g].power : 0); }
+
+    function updateHUD(){
+      $("hudNight").textContent = bn(G.night);
+      $("hudPts").textContent = bn(me().pts);
+      $("hudRate").textContent = "+" + bn(myRate());
+    }
+
+    /* ---------- top photo strip + room viewing ---------- */
+    function faceSVG(look){
+      return girlSVG(look, false).replace('viewBox="0 0 100 118"', 'viewBox="14 2 72 72"');
+    }
+    function viewed(){ return G.players[G.viewIdx || 0]; }
+    function renderStrip(){
+      var box = $("faceStrip"); if(!box || !G) return;
+      var html = "";
+      G.players.forEach(function(p, i){
+        var cls = "faceBtn"
+          + (i === (G.viewIdx || 0) ? " viewing" : "")
+          + (p.out ? " isOut" : "")
+          + ((p.attacked || (p.you && G.ghost)) ? " underAttack" : "");
+        html += '<button type="button" class="' + cls + '" data-vi="' + i + '" aria-label="' + p.name + 'র ছবি — টিপ দিলে তার ঘর দেখবে">'
+          + '<span class="crop">' + faceSVG(p.look) + '</span>'
+          + (p.out ? '<span class="faceX"><svg viewBox="0 0 60 60"><path d="M11 11 L49 49 M49 11 L11 49" stroke="#ff4545" stroke-width="8" stroke-linecap="round" fill="none"/></svg></span>' : "")
+          + '</button>';
+      });
+      box.innerHTML = html;
+      var btns = box.querySelectorAll(".faceBtn");
+      for(var k=0;k<btns.length;k++){
+        btns[k].addEventListener("click", function(){ setView(+this.getAttribute("data-vi")); });
+      }
+    }
+    function setView(i){
+      if(!G || G.phase !== "sleep" || G.over) return;
+      if(i === (G.viewIdx || 0)) return;
+      G.viewIdx = i;
+      sfxPop();
+      renderStrip(); renderRoomView(); renderShopVisibility();
+    }
+    function renderShopVisibility(){
+      var own = (G.viewIdx || 0) === 0;
+      $("shopCard").classList.toggle("hidden", !own);
+      var vb = $("viewBanner");
+      if(own){ vb.classList.add("hidden"); vb.innerHTML = ""; return; }
+      var p = viewed();
+      vb.classList.remove("hidden");
+      vb.innerHTML = girlSVG(p.look, false)
+        + '<span><b>' + p.name + 'র ঘর</b> · <span id="vbPts">' + bn(p.pts) + ' পয়েন্ট</span>'
+        + (p.out ? ' · <span style="color:var(--danger)">আউট!</span>' : "")
+        + '<br><small>নিজের ঘরে ফিরতে উপরে নিজের ছবিতে টিপ দাও</small></span>';
+    }
+    function renderRoomView(){
+      renderBeds(viewed());
+      renderGhostArea();
+    }
+    function renderGhostArea(){
+      if(!G) return;
+      var p = viewed();
+      var slot = $("ghostSlot"), wrap = $("bangWrap"), door = $("roomDoor"), kt = $("knockTxt");
+      slot.innerHTML = ""; wrap.classList.add("hidden"); door.classList.remove("knock"); kt.classList.add("hidden");
+      if(p.out){
+        slot.innerHTML = '<div class="ghostIn">' + ghostSVG(p.eatenBy || GHOST_TYPES[0]) + '</div>';
+        var m = $("roomMsg");
+        m.textContent = p.you ? "তুমি আউট! ভূত তোমাকে ধরে ফেলেছে।" : (p.name + " আউট! ভূত তাকে ধরে ফেলেছে।");
+        m.classList.remove("hidden");
+        clearTimeout(m._t); m._t = null;
+        return;
+      }
+      if(p.you && G.ghost){
+        slot.innerHTML = '<button type="button" class="ghostAt" id="ghostBtn" aria-label="' + G.ghost.type.name + ' — তাড়াতে টিপ দাও">' + ghostSVG(G.ghost.type) + '</button>';
+        $("bangName").textContent = G.ghost.type.name + " দরজায় ধাক্কা দিচ্ছে! টিপে তাড়াও!";
+        wrap.classList.remove("hidden");
+        $("bangFill").style.width = Math.min(100, G.ghost.bang) + "%";
+        door.classList.add("knock"); kt.classList.remove("hidden");
+        $("ghostBtn").addEventListener("click", tapGhost);
+      } else if(!p.you && p.attacked && p.ghostType){
+        slot.innerHTML = '<div class="ghostAt" style="cursor:default">' + ghostSVG(p.ghostType) + '</div>';
+        $("bangName").textContent = p.ghostType.name + " " + p.name + "র দরজায় ধাক্কা দিচ্ছে! " + p.name + " তাড়ানোর চেষ্টা করছে…";
+        wrap.classList.remove("hidden");
+        $("bangFill").style.width = (p.bangPct || 0) + "%";
+        door.classList.add("knock"); kt.classList.remove("hidden");
+      }
+    }
+
+    /* ---------- phase 1: find a room (30 -> 1) ---------- */
+    function startSearch(){
+      var totalRooms = G.players.length + 2;
+      var doorsEl = $("doors"); doorsEl.innerHTML = "";
+      var rooms = [];
+      for(var i=0;i<totalRooms;i++){
+        rooms.push(null);
+        (function(idx){
+          var d = document.createElement("button");
+          d.type = "button"; d.className = "door"; d.id = "door" + idx;
+          d.innerHTML = '<span class="who"></span><span class="dnum">ঘর ' + bn(idx+1) + '</span>';
+          d.addEventListener("click", function(){ claimRoom(idx, me(), d); });
+          doorsEl.appendChild(d);
+        })(i);
+      }
+      G.rooms = rooms;
+      var count = 30;
+      $("countBig").textContent = bn(count);
+      $("searchMsg").textContent = "একটা দরজায় টিপ দাও — ওটাই হবে তোমার ঘর";
+      /* friends pick their rooms one by one */
+      var bots = G.players.slice(1);
+      bots.forEach(function(bot, i){
+        later(rnd(1200, 9000) + i*600, function(){
+          if(G.phase !== "search") return;
+          var free = freeRooms(); if(!free.length) return;
+          var idx = pick(free);
+          G.rooms[idx] = bot; bot.room = idx;
+          markDoor(idx, bot, false);
+        });
+      });
+      var iv = every(800, function(){
+        var allIn = G.players.every(function(p){ return p.room >= 0; });
+        if(allIn){
+          clearInterval(iv);
+          $("countBig").textContent = "০";
+          $("searchMsg").textContent = "সবাই ঘর পেয়ে গেছে! এবার ঘুমানোর পালা…";
+          sfxFlee();
+          later(1100, startSleep);
+          return;
+        }
+        count--;
+        if(count <= 0){
+          clearInterval(iv);
+          if(me().room < 0){
+            var free = freeRooms();
+            if(free.length){ var idx = pick(free); G.rooms[idx] = me(); me().room = idx; markDoor(idx, me(), true); }
+            $("searchMsg").textContent = "সময় শেষ! এই ঘরটা তোমার হয়ে গেল।";
+          }
+          later(900, startSleep);
+        } else {
+          $("countBig").textContent = bn(count);
+          if(count <= 5) sfxPop();
+        }
+      });
+    }
+    function freeRooms(){
+      var f = [];
+      for(var i=0;i<G.rooms.length;i++){ if(!G.rooms[i]) f.push(i); }
+      return f;
+    }
+    function markDoor(idx, player, mine){
+      var d = $("door" + idx); if(!d) return;
+      d.classList.add("taken"); if(mine) d.classList.add("mine");
+      d.querySelector(".who").innerHTML = girlSVG(player.look, false) + "<br>" + player.name + (mine ? " (তুমি)" : "");
+      d.disabled = true;
+    }
+    function claimRoom(idx, player, el){
+      if(G.phase !== "search" || G.rooms[idx] || player.room >= 0) return;
+      G.rooms[idx] = player; player.room = idx; G.myRoom = idx;
+      markDoor(idx, player, true);
+      sfxBuy();
+      $("searchMsg").textContent = "পেয়ে গেছো! ঘর নম্বর " + bn(idx+1) + " তোমার। এবার ঘুমানোর পালা…";
+    }
+
+    /* ---------- phase 2: sleep, earn, ghosts ---------- */
+    function startSleep(){
+      if(G.over) return;
+      G.phase = "sleep";
+      G.viewIdx = 0;
+      $("phaseSearch").classList.add("hidden");
+      $("phaseSleep").classList.remove("hidden");
+      renderStrip(); renderRoomView(); renderShopVisibility(); renderShop(); renderFriends(); updateHUD();
+      $("sleepMsg").textContent = "চাঁদ আকাশে আছে… ঘুমাও আর পয়েন্ট জমাও!";
+      G.nightLeft = G.nightLen;
+      $("nightFill").style.width = "0%";
+      spawnZzzLoop();
+      /* main 1-second tick */
+      every(1000, function(){
+        if(G.phase !== "sleep") return;
+        G.nightLeft--;
+        $("nightFill").style.width = ((G.nightLen - G.nightLeft) / G.nightLen * 100) + "%";
+        if(!me().out){
+          addPoints(me(), myRate(), true);
+        }
+        G.players.slice(1).forEach(function(bot){
+          if(!bot.out && !bot.attacked){ addPoints(bot, botRate(bot), false); }
+        });
+        var vb = $("vbPts");
+        if(vb){ vb.textContent = bn(viewed().pts) + " পয়েন্ট"; }
+        renderFriends();
+        if(G.nightLeft <= 0 && !me().out){ endNight(); }
+      });
+      /* ghost scheduler */
+      (function scheduleGhost(){
+        later(rnd(7000, 12000), function(){
+          if(G.phase !== "sleep") return;
+          spawnGhost();
+          scheduleGhost();
+        });
+      })();
+    }
+    function botRate(bot){
+      return Math.min(bot.pace + bot.beds - 1, 3) + (Math.random() < 0.1 ? 1 : 0);
+    }
+    function addPoints(p, n, floatIt){
+      p.pts += n; p.total += n;
+      if(p.you){
+        updateHUD(); renderShop();
+        if(floatIt && n > 0 && (G.viewIdx || 0) === 0) floatPoint("+" + bn(n));
+      }
+    }
+    function floatPoint(txt){
+      var room = $("room"); if(!room) return;
+      var el = document.createElement("div");
+      el.className = "floatPt"; el.textContent = txt;
+      el.style.left = rnd(18, 46) + "%"; el.style.bottom = "34%";
+      room.appendChild(el);
+      setTimeout(function(){ el.remove(); }, 1000);
+    }
+    function spawnZzzLoop(){
+      (function loop(){
+        if(G.phase !== "sleep") return;
+        var zone = $("bedsZone");
+        var vp = viewed();
+        if(zone && vp && !vp.out && !vp.attacked){
+          var z = document.createElement("div");
+          z.className = "zzz"; z.textContent = "Z";
+          z.style.left = rnd(6, 26) + "%"; z.style.bottom = "86px";
+          z.style.fontSize = ri(17, 27) + "px";
+          $("room").appendChild(z);
+          setTimeout(function(){ z.remove(); }, 2400);
+        }
+        later(rnd(900, 1600), loop);
+      })();
+    }
+
+    function renderBeds(p){
+      if(!p) p = viewed();
+      var zone = $("bedsZone"); zone.innerHTML = "";
+      var n = Math.min(p.beds, 6);
+      for(var i=0;i<n;i++){
+        (function(first){
+          var b = document.createElement("button");
+          b.type = "button"; b.className = "bed";
+          var tag = first ? (p.out ? (p.name + " আউট!") : (p.name + " ঘুমাচ্ছে")) : "খাট";
+          b.innerHTML = '<span class="bedTag">' + tag + '</span>' + bedSVG(p.look, first && p.out);
+          b.setAttribute("aria-label", first ? (p.name + "র বিছানা") : "খালি খাট");
+          b.addEventListener("click", function(){
+            sfxPop();
+            if(p.you && (G.viewIdx || 0) === 0 && !p.out){ floatPoint("ঘুম…"); }
+            else if(!p.you){ showRoomMsg(p.name + " ঘুমাচ্ছে… Z z z"); }
+          });
+          zone.appendChild(b);
+        })(i === 0);
+      }
+      if(p.beds > 6){
+        var more = document.createElement("div");
+        more.className = "bedTag";
+        more.style.position = "static"; more.style.transform = "none";
+        more.textContent = "মোট খাট: " + bn(p.beds) + "টা";
+        zone.appendChild(more);
+      }
+    }
+
+    /* ghost attacks the player's door */
+    function spawnGhost(){
+      /* sometimes a ghost bothers a friend instead */
+      if(Math.random() < 0.35 && G.players.length > 1 && !G.friendGhost){
+        friendGhostAttack();
+        if(G.ghost) return;
+      }
+      if(G.ghost || me().out) return;
+      var t = pick(GHOST_TYPES.slice(0, Math.min(2 + G.night, 5)));
+      var speedUp = Math.max(0.55, 1 - (G.night - 1) * 0.08);
+      G.ghost = { type:t, bang:0, rate: 100 / (t.fillSec * speedUp) };
+      /* if Jainab is visiting a friend's room, bring her straight back to her own door */
+      if((G.viewIdx || 0) !== 0){
+        G.viewIdx = 0;
+        renderShopVisibility();
+        renderRoomView();
+        showRoomMsg("ভূত এসেছে তোমার দরজায়! তাড়াতাড়ি তাড়াও!");
+      } else {
+        renderGhostArea();
+      }
+      renderStrip();
+      sfxKnock();
+      G.ghost.knockTimer = every(750, function(){ if(G.ghost) sfxKnock(); });
+      G.ghost.tickTimer = every(120, function(){
+        if(!G.ghost) return;
+        G.ghost.bang += G.ghost.rate * 0.12;
+        if((G.viewIdx || 0) === 0){ $("bangFill").style.width = Math.min(100, G.ghost.bang) + "%"; }
+        if(G.ghost.bang >= 100){ ghostBreaksIn(); }
+      });
+    }
+    function clearGhost(){
+      if(!G || !G.ghost) return;
+      clearInterval(G.ghost.knockTimer); clearInterval(G.ghost.tickTimer);
+      G.ghost = null;
+      renderGhostArea();
+      renderStrip();
+    }
+    function tapGhost(){
+      if(!G.ghost) return;
+      sfxZap();
+      G.ghost.bang -= tapPower();
+      $("bangFill").style.width = Math.max(0, G.ghost.bang) + "%";
+      var gb = $("ghostBtn");
+      if(gb){ gb.style.transform = "scale(.88) rotate(-5deg)"; setTimeout(function(){ if(gb) gb.style.transform = ""; }, 110); }
+      if(G.ghost.bang <= 0){
+        var t = G.ghost.type;
+        clearGhost();
+        sfxFlee();
+        addPoints(me(), 3, false); updateHUD(); renderShop();
+        showRoomMsg(t.name + " পালিয়ে গেছে! +৩ পয়েন্ট");
+      }
+    }
+    function ghostBreaksIn(){
+      var t = G.ghost.type;
+      clearGhost();
+      sfxScare();
+      me().out = true; me().eatenBy = t;
+      renderStrip(); renderFriends();
+      if((G.viewIdx || 0) === 0){ renderRoomView(); }
+      showRoomMsg(t.name + " ঢুকে পড়েছে! ভূত তোমাকে ধরে ফেলেছে — তুমি আউট!");
+      $("sleepMsg").textContent = "আউট! " + t.name + " তোমাকে ধরে ফেলেছে।";
+      later(2400, function(){ endNight("caught"); });
+    }
+    function friendGhostAttack(){
+      var bots = G.players.slice(1).filter(function(b){ return !b.attacked && !b.out; });
+      if(!bots.length) return;
+      var bot = pick(bots), t = pick(GHOST_TYPES);
+      bot.attacked = true; bot.ghostType = t; bot.bangPct = 0; G.friendGhost = bot;
+      renderFriends(); renderStrip();
+      if(viewed() === bot) renderGhostArea();
+      var dur = rnd(4000, 6500), stepMs = 200;
+      var totalSteps = Math.max(1, Math.ceil(dur / stepMs)), steps = 0;
+      bot.attackTimer = every(stepMs, function(){
+        if(!bot.attacked){ clearInterval(bot.attackTimer); return; }
+        steps++;
+        bot.bangPct = Math.min(100, steps / totalSteps * 100);
+        if(viewed() === bot){
+          var f = $("bangFill"); if(f) f.style.width = bot.bangPct + "%";
+        }
+        if(steps >= totalSteps){
+          clearInterval(bot.attackTimer);
+          bot.attacked = false; G.friendGhost = null;
+          if(Math.random() < 0.15){
+            bot.out = true; bot.eatenBy = t;
+            if(viewed() === bot){
+              renderRoomView(); renderShopVisibility();
+              showRoomMsg(t.name + " " + bot.name + "কে ধরে ফেলেছে! " + bot.name + " আউট!");
+            }
+          } else {
+            if(Math.random() < 0.2){
+              bot.beds += 1;
+              if(viewed() === bot) renderBeds(bot);
+            }
+            if(viewed() === bot) renderGhostArea();
+          }
+          renderFriends(); renderStrip();
+        }
+      });
+    }
+    function showRoomMsg(txt){
+      var m = $("roomMsg");
+      m.textContent = txt; m.classList.remove("hidden");
+      clearTimeout(m._t);
+      m._t = setTimeout(function(){ m.classList.add("hidden"); }, 2600);
+    }
+
+    /* ---------- shop ---------- */
+    function renderShop(){
+      $("bedIcon").innerHTML = bedIconSVG();
+      $("bedCountTxt").textContent = bn(me().beds);
+      var price = nextBedPrice();
+      var bb = $("btnBuyBed");
+      if(price === null){
+        bb.textContent = "আর খাট নেই"; bb.disabled = true;
+      } else {
+        bb.textContent = "কেনো — " + bn(price) + " পয়েন্ট";
+        bb.disabled = me().pts < price;
+      }
+      var g = me().gun;
+      var gi = $("gunIcon"), gn = $("gunName"), gd = $("gunDesc"), gb = $("btnBuyGun"), go = $("gunOwned");
+      if(g >= GUNS.length - 1){
+        var top = GUNS[GUNS.length - 1];
+        gi.innerHTML = gunSVG(top.color, top.star);
+        gn.textContent = top.name;
+        gd.textContent = "তোমার কাছে সবচেয়ে শক্তিশালী বন্দুকটা আছে। ভূত দেখলেই টিপ দাও!";
+        gb.classList.add("hidden"); go.classList.remove("hidden");
+      } else {
+        var nxt = GUNS[g + 1];
+        gi.innerHTML = gunSVG(nxt.color, nxt.star);
+        gn.textContent = nxt.name;
+        gd.textContent = nxt.desc + (g >= 0 ? " এখন তোমার কাছে আছে: " + GUNS[g].name + "।" : "");
+        gb.classList.remove("hidden"); go.classList.add("hidden");
+        gb.textContent = "কেনো — " + bn(nxt.price) + " পয়েন্ট";
+        gb.disabled = me().pts < nxt.price;
+      }
+    }
+    $("btnBuyBed").addEventListener("click", function(){
+      var price = nextBedPrice();
+      if(price === null || me().pts < price) return;
+      me().pts -= price; me().beds += 1;
+      sfxBuy(); renderBeds(); renderShop(); updateHUD(); renderFriends();
+      showRoomMsg("নতুন খাট কিনলে! এখন প্রতি সেকেন্ডে +" + bn(myRate()) + " পয়েন্ট");
+    });
+    $("btnBuyGun").addEventListener("click", function(){
+      var nxt = GUNS[me().gun + 1];
+      if(!nxt || me().pts < nxt.price) return;
+      me().pts -= nxt.price; me().gun += 1;
+      sfxBuy(); renderShop(); updateHUD(); renderFriends();
+      showRoomMsg(nxt.name + " কিনলে! ভূত তাড়ানো এখন আরও সহজ");
+    });
+
+    /* ---------- friends strip ---------- */
+    function renderFriends(){
+      var box = $("friends"); if(!box || !G) return;
+      var html = "";
+      G.players.forEach(function(p){
+        var status;
+        if(p.out) status = "আউট! ভূত ধরে ফেলেছে";
+        else if(p.attacked) status = "ভূত দরজায় ধাক্কা দিচ্ছে!";
+        else status = "ঘুমাচ্ছে… Z z z";
+        html += '<div class="fCard' + (p.you ? " you" : "") + (p.attacked ? " attacked" : "") + (p.out ? " outP" : "") + '">'
+          + girlSVG(p.look, !p.out && !p.attacked)
+          + '<div><div class="fn">' + p.name + (p.you ? " (তুমি)" : "") + '</div>'
+          + '<div class="fp">' + bn(p.pts) + ' পয়েন্ট</div>'
+          + '<div class="fs">' + status + '<br>খাট: ' + bn(p.beds) + 'টা</div></div>'
+          + (p.attacked && p.ghostType ? '<div class="fGhost">' + ghostSVG(p.ghostType) + '</div>' : "")
+          + '</div>';
+      });
+      box.innerHTML = html;
+    }
+
+    /* ---------- morning / results ---------- */
+    function endNight(reason){
+      if(G.over) return;
+      G.over = true; G.phase = "end";
+      clearGhost(); clearTimers();
+      if(reason === "caught"){ sfxScare(); } else { sfxMorning(); }
+      var ranked = G.players.slice().sort(function(a,b){ return b.total - a.total; });
+      var myRank = ranked.indexOf(me()) + 1;
+      var medals = ["১ম","২য়","৩য়","৪র্থ","৫ম","৬ষ্ঠ"];
+      var alive = G.players.filter(function(p){ return !p.out; });
+      var pool = alive.length ? alive : ranked;
+      var winner = pool.slice().sort(function(a,b){ return b.total - a.total; })[0];
+      var iWon = winner === me() && !me().out;
+      $("endTitle").textContent = reason === "caught" ? "ভূত তোমাকে ধরে ফেলেছে!" : "সকাল হয়ে গেছে!";
+      var tb = $("trophyBox");
+      if(iWon){
+        tb.innerHTML = TROPHY + '<div class="trophyTxt">তুমি জিতেছো, জয়নাব!</div>';
+        confetti();
+      } else {
+        tb.innerHTML = "";
+      }
+      if(reason === "caught"){
+        $("endMsg").textContent = "রাত " + bn(G.night) + "-এ ভূত ঘরে ঢুকে তোমাকে ধরে ফেলেছে — তুমি আউট! তুমি জমিয়েছিলে মোট " + bn(me().total) + " পয়েন্ট। এই রাতে জিতেছে " + winner.name + "। পরের রাতে আবার চেষ্টা করো!";
+      } else if(me().out){
+        $("endMsg").textContent = "রাত " + bn(G.night) + " শেষ! তুমি আউট হয়ে গিয়েছিলে — মোট " + bn(me().total) + " পয়েন্ট জমিয়েছো। জিতেছে " + winner.name + "।";
+      } else {
+        $("endMsg").textContent = "রাত " + bn(G.night) + " শেষ! তুমি হয়েছো " + medals[myRank-1] + " — মোট " + bn(me().total) + " পয়েন্ট জমিয়েছো।";
+      }
+      var html = "";
+      ranked.forEach(function(p, i){
+        html += '<div class="rankRow' + (p === winner && !p.out ? " first" : "") + '">'
+          + '<div class="rk">' + medals[i] + '</div>'
+          + '<span class="' + (p.out ? "outAv" : "") + '">' + girlSVG(p.look, false) + '</span>'
+          + '<div class="rn">' + p.name + (p.you ? " (তুমি)" : "") + (p.out ? '<span class="outBadge">✕ আউট</span>' : "") + '</div>'
+          + '<div class="rp">' + bn(p.total) + ' পয়েন্ট</div></div>';
+      });
+      $("rankList").innerHTML = html;
+      /* friends spend their points on beds between nights */
+      G.players.slice(1).forEach(function(bot){
+        if(bot.out) return;
+        while(bot.pts >= 25 && bot.beds < 7 && Math.random() < 0.7){ bot.pts -= 25; bot.beds += 1; }
+      });
+      $("scrGame").classList.add("hidden");
+      $("scrEnd").classList.remove("hidden");
+      window.scrollTo(0,0);
+    }
+    function confetti(){
+      var colors = ["#ff7eb6","#ffd94d","#7dffcb","#8fd8ff","#b388ff"];
+      for(var i=0;i<44;i++){
+        var c = document.createElement("div");
+        c.className = "confetti";
+        c.style.left = rnd(0,100) + "vw";
+        c.style.width = ri(7,12) + "px"; c.style.height = ri(9,16) + "px";
+        c.style.background = pick(colors);
+        c.style.animationDuration = rnd(1.8, 3.4) + "s";
+        c.style.animationDelay = rnd(0, .6) + "s";
+        document.body.appendChild(c);
+        (function(el){ setTimeout(function(){ el.remove(); }, 4200); })(c);
+      }
+    }
+
+    /* ---------- wiring ---------- */
+    $("btnSound").innerHTML = SOUND_ON;
+    $("btnSound").addEventListener("click", function(){
+      muted = !muted;
+      $("btnSound").innerHTML = muted ? SOUND_OFF : SOUND_ON;
+      if(!muted) sfxPop();
+    });
+    $("btnPlay").addEventListener("click", function(){ ac(); sfxBuy(); startGame(false); });
+    $("btnNextNight").addEventListener("click", function(){ sfxBuy(); startGame(true); });
+    $("btnRestart").addEventListener("click", function(){
+      clearTimers();
+      $("scrEnd").classList.add("hidden");
+      $("scrGame").classList.add("hidden");
+      $("scrStart").classList.remove("hidden");
+      window.scrollTo(0,0);
+    });
+
+    buildStars();
+    buildStartControls();
+    renderMyGirl();
+    renderPlayersRow();
+    </script>
+  </body>
+</html>

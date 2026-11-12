@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>Tarek Bhai Game — তারেক ভাইয়া উড়ে যাও!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#7ecbf2; --sky-mid:#aee3fb; --sky-bottom:#e8f9ff;
+    --ink:#12314d; --ink-soft:#2f5b7d;
+    --card:#ffffff; --card-line:#cfeaf8;
+    --sun:#ffc531; --coral:#ff6b57; --coral-dark:#e04a36;
+    --green:#2fb457; --green-dark:#1f8a41;
+    --yellow:#ffd93d; --pink:#ff8fab;
+    --ground:#7ed07e; --ground-dark:#4caf50;
+    --bubble:#ffffff;
+    --shadow:0 10px 30px rgba(18,49,77,.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --sky-top:#0b2340; --sky-mid:#14365e; --sky-bottom:#1d4e79;
+      --ink:#eaf6ff; --ink-soft:#b9dcf5;
+      --card:#12314d; --card-line:#2a5a85;
+      --bubble:#ffffff; --shadow:0 10px 30px rgba(0,0,0,.45);
+    }
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Hind Siliguri",system-ui,sans-serif;
+    color:var(--ink);
+    background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 55%,var(--sky-bottom) 100%);
+    min-height:100vh; min-height:100dvh;
+    overflow-x:hidden;
+  }
+  .wrap{max-width:1060px;margin:0 auto;padding:16px 14px 40px;}
+
+  /* ---------- Header ---------- */
+  header{text-align:center;padding:10px 6px 4px;}
+  h1{
+    font-family:"Baloo Da 2","Hind Siliguri",sans-serif;
+    font-size:clamp(32px,6.5vw,54px); font-weight:800; line-height:1.15; margin:0;
+    color:var(--ink);
+  }
+  h1 .pop{color:var(--coral-dark);}
+  @media (prefers-color-scheme: dark){ h1 .pop{color:var(--yellow);} }
+  .tagline{font-size:clamp(15px,3.4vw,19px); color:var(--ink-soft); margin:6px auto 0; max-width:560px; font-weight:600;}
+
+  /* ---------- HUD ---------- */
+  .hud{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0 12px;
+  }
+  .stat{
+    background:var(--card); border:2px solid var(--card-line); border-radius:16px;
+    padding:8px 6px 6px; text-align:center; box-shadow:var(--shadow);
+  }
+  .stat .label{font-size:12.5px; font-weight:700; color:var(--ink-soft); letter-spacing:.02em;}
+  .stat .value{font-family:"Baloo Da 2",sans-serif; font-size:clamp(22px,5vw,30px); font-weight:800; line-height:1.1;}
+  .stat .value.coral{color:var(--coral-dark);}
+  @media (prefers-color-scheme: dark){ .stat .value.coral{color:var(--pink);} }
+
+  /* ---------- Stage ---------- */
+  .game{display:grid; grid-template-columns:1fr 74px; gap:12px; align-items:stretch;}
+  @media (max-width:560px){ .game{grid-template-columns:1fr 56px; gap:8px;} }
+  .stage{
+    position:relative; border-radius:24px; overflow:hidden;
+    background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0) 40%);
+    border:2px solid var(--card-line); box-shadow:var(--shadow);
+    min-height:430px; touch-action:manipulation; user-select:none; cursor:pointer;
+  }
+  .sun{
+    position:absolute; top:18px; right:20px; width:64px; height:64px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #ffe98a, var(--sun));
+    box-shadow:0 0 0 10px rgba(255,197,49,.22), 0 0 44px rgba(255,197,49,.55);
+  }
+  @media (prefers-color-scheme: dark){ .sun{background:radial-gradient(circle at 35% 35%, #fdfdf5, #dfe9f2); box-shadow:0 0 0 8px rgba(255,255,255,.12), 0 0 34px rgba(255,255,255,.35);} }
+  .star-deco{position:absolute; font-size:18px; opacity:.85; animation:twinkle 2.4s ease-in-out infinite;}
+  @keyframes twinkle{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.35);opacity:1}}
+
+  .cloud{position:absolute; background:#fff; border-radius:999px; opacity:.92; animation:drift linear infinite;}
+  .cloud::before,.cloud::after{content:""; position:absolute; background:#fff; border-radius:50%;}
+  .cloud::before{width:55%; height:170%; left:14%; top:-80%;}
+  .cloud::after{width:38%; height:120%; right:12%; top:-55%;}
+  @keyframes drift{from{transform:translateX(-30px)}to{transform:translateX(30px)}}
+  @media (prefers-color-scheme: dark){ .cloud,.cloud::before,.cloud::after{background:#dbeeff;} .cloud{opacity:.28;} }
+
+  .sky-label{
+    position:absolute; left:14px; top:12px; z-index:5;
+    background:var(--coral); color:#fff; font-family:"Baloo Da 2",sans-serif; font-weight:800;
+    font-size:clamp(15px,3.6vw,19px); padding:6px 14px; border-radius:999px;
+    box-shadow:0 6px 16px rgba(224,74,54,.4);
+  }
+
+  .bubble{
+    position:absolute; left:0; right:0; margin:0 auto; width:fit-content; top:52px; transform:scale(.9);
+    background:var(--bubble); color:#12314d; font-weight:800; font-family:"Baloo Da 2","Hind Siliguri",sans-serif;
+    font-size:clamp(21px,5.2vw,28px); padding:12px 22px; border-radius:18px;
+    box-shadow:0 8px 22px rgba(18,49,77,.25); max-width:88%; text-align:center;
+    opacity:0; transition:opacity .18s ease, transform .18s ease; z-index:6; pointer-events:none;
+  }
+  .bubble::after{content:""; position:absolute; left:50%; bottom:-9px; transform:translateX(-50%); border:10px solid transparent; border-top-color:var(--bubble); border-bottom:0;}
+  .bubble.show{opacity:1; transform:scale(1);}
+
+  .char-zone{position:absolute; left:0; right:0; bottom:64px; display:flex; justify-content:center; z-index:4;}
+  #tarek{width:clamp(150px,34vw,210px); height:auto; display:block; filter:drop-shadow(0 14px 14px rgba(18,49,77,.25)); will-change:transform;}
+  #tarek.bounce{animation:bounce .45s cubic-bezier(.28,1.6,.5,1);}
+  #tarek.superfly{animation:superfly .8s cubic-bezier(.28,1.4,.5,1);}
+  #tarek.spin{animation:spin .6s ease;}
+  @keyframes bounce{0%{transform:translateY(0) scale(1,1)}30%{transform:translateY(-46px) scale(.94,1.08)}55%{transform:translateY(0) scale(1.1,.86)}75%{transform:translateY(-14px) scale(.98,1.03)}100%{transform:translateY(0) scale(1,1)}}
+  @keyframes superfly{0%{transform:translateY(0) rotate(0)}35%{transform:translateY(-120px) rotate(-7deg) scale(1.02)}60%{transform:translateY(-96px) rotate(6deg)}100%{transform:translateY(0) rotate(0)}}
+  @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+  .name-tag{
+    position:absolute; left:50%; bottom:-6px; transform:translateX(-50%);
+    background:#12314d; color:#fff; font-family:"Baloo Da 2",sans-serif; font-weight:700;
+    padding:3px 16px; border-radius:999px; font-size:16px; white-space:nowrap;
+  }
+  .ground{
+    position:absolute; left:0; right:0; bottom:0; height:58px; z-index:2;
+    background:linear-gradient(180deg,var(--ground),var(--ground-dark));
+    border-top:4px solid rgba(255,255,255,.35);
+  }
+  .ground .flower{position:absolute; bottom:16px; font-size:18px;}
+  .jainab{
+    position:absolute; left:12px; bottom:44px; z-index:5; pointer-events:none;
+    display:flex; flex-direction:column; align-items:center; width:92px;
+  }
+  .jainab svg{display:block; width:clamp(64px,15vw,86px); height:auto; filter:drop-shadow(0 8px 8px rgba(18,49,77,.25));}
+  .jainab .n{font-family:"Baloo Da 2",sans-serif; font-weight:700; background:#fff; color:#12314d; border-radius:999px; padding:1px 10px; font-size:13.5px; display:inline-block; margin-top:-4px;}
+  .jainab-cheer{
+    position:absolute; left:96px; bottom:118px; z-index:5; background:#fff; color:#12314d; font-weight:700; font-size:14.5px;
+    padding:6px 12px; border-radius:14px; box-shadow:var(--shadow); max-width:150px; opacity:0; transition:opacity .2s; pointer-events:none;
+  }
+  .jainab-cheer.show{opacity:1;}
+  @media (max-width:560px){ .jainab-cheer{left:80px; bottom:108px; font-size:13px; max-width:120px;} }
+
+  .fx{position:absolute; z-index:7; pointer-events:none; font-size:24px; animation:floatUp 0.9s ease-out forwards;}
+  @keyframes floatUp{from{transform:translateY(0) scale(.7) rotate(0); opacity:1}to{transform:translateY(-110px) scale(1.3) rotate(24deg); opacity:0}}
+
+  .banner{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center; z-index:8; pointer-events:none;
+  }
+  .banner span{
+    font-family:"Baloo Da 2",sans-serif; font-weight:800; font-size:clamp(26px,7vw,44px);
+    background:var(--yellow); color:#12314d; padding:10px 26px; border-radius:20px;
+    box-shadow:0 14px 34px rgba(18,49,77,.35); transform:scale(0); border:3px solid #12314d22;
+  }
+  .banner.play span{animation:bannerPop 1.4s cubic-bezier(.28,1.5,.5,1) forwards;}
+  @keyframes bannerPop{0%{transform:scale(0) rotate(-6deg)}18%{transform:scale(1.08) rotate(2deg)}28%{transform:scale(1)}80%{transform:scale(1);opacity:1}100%{transform:scale(1.05);opacity:0}}
+
+  /* ---------- Altitude meter ---------- */
+  .meter{
+    background:var(--card); border:2px solid var(--card-line); border-radius:20px; box-shadow:var(--shadow);
+    padding:12px 8px; display:flex; flex-direction:column; align-items:center; gap:6px;
+  }
+  .meter .m-title{font-weight:700; font-size:12.5px; color:var(--ink-soft); text-align:center; line-height:1.25;}
+  .track{position:relative; flex:1; width:26px; border-radius:999px; background:linear-gradient(180deg,#bfe9ff,#eaf8ff); border:2px solid var(--card-line); overflow:visible; min-height:290px;}
+  @media (prefers-color-scheme: dark){ .track{background:linear-gradient(180deg,#2a5a85,#14365e);} }
+  .fill{position:absolute; left:0; right:0; bottom:0; height:0%; border-radius:999px; background:linear-gradient(180deg,var(--yellow),var(--coral)); transition:height .3s ease;}
+  .rocket{position:absolute; left:50%; transform:translate(-50%,50%); bottom:0%; font-size:24px; transition:bottom .3s ease; z-index:2;}
+  .tick{position:absolute; left:50%; transform:translate(-50%,50%); font-size:10.5px; font-weight:800; color:#12314d; white-space:nowrap; z-index:3; text-shadow:0 1px 2px rgba(255,255,255,.9), 0 -1px 2px rgba(255,255,255,.9);}
+  @media (max-width:560px){ .track{min-height:260px;} }
+
+  /* ---------- Controls ---------- */
+  .controls{margin-top:14px; background:var(--card); border:2px solid var(--card-line); border-radius:22px; box-shadow:var(--shadow); padding:16px;}
+  .power-head{display:flex; justify-content:space-between; align-items:baseline; gap:8px; flex-wrap:wrap;}
+  .power-head .t{font-family:"Baloo Da 2",sans-serif; font-weight:800; font-size:19px;}
+  .power-head .hint{font-size:13.5px; color:var(--ink-soft); font-weight:600;}
+  .powerbar{position:relative; height:26px; border-radius:999px; margin:10px 0 4px; overflow:hidden;
+    background:linear-gradient(90deg,#8ed081 0 55%, #ffd93d 55% 72%, #ff6b57 72% 88%, #ffd93d 88% 100%); border:2px solid var(--card-line);}
+  .powerbar .sweet{position:absolute; top:0; bottom:0; left:72%; width:16%; border-left:3px dashed rgba(18,49,77,.55); border-right:3px dashed rgba(18,49,77,.55);}
+  .marker{position:absolute; top:-2px; bottom:-2px; width:8px; margin-left:-4px; background:#12314d; border-radius:4px; box-shadow:0 0 0 2px #fff;}
+  .power-labels{display:flex; justify-content:space-between; font-size:12px; font-weight:700; color:var(--ink-soft); margin-bottom:12px;}
+  .btn-row{display:grid; grid-template-columns:1.4fr 1fr; gap:12px;}
+  @media (max-width:560px){ .btn-row{grid-template-columns:1fr;} }
+  button{font-family:inherit; cursor:pointer; border:0;}
+  .btn-launch{
+    background:var(--coral); color:#fff; font-family:"Baloo Da 2",sans-serif; font-weight:800;
+    font-size:clamp(21px,5.4vw,27px); padding:16px 12px; border-radius:18px;
+    box-shadow:0 7px 0 var(--coral-dark), 0 14px 24px rgba(224,74,54,.35);
+    transition:transform .06s ease, box-shadow .06s ease; touch-action:manipulation;
+  }
+  .btn-launch:active{transform:translateY(5px); box-shadow:0 2px 0 var(--coral-dark), 0 6px 12px rgba(224,74,54,.3);}
+  .btn-tap{
+    background:var(--green); color:#fff; font-family:"Baloo Da 2",sans-serif; font-weight:800;
+    font-size:clamp(19px,5vw,24px); padding:16px 12px; border-radius:18px;
+    box-shadow:0 7px 0 var(--green-dark), 0 14px 24px rgba(31,138,65,.3);
+    transition:transform .06s ease, box-shadow .06s ease; touch-action:manipulation;
+  }
+  .btn-tap:active{transform:translateY(5px); box-shadow:0 2px 0 var(--green-dark), 0 6px 12px rgba(31,138,65,.28);}
+  .howto{margin:14px 2px 0; font-size:14.5px; color:var(--ink-soft); font-weight:500; line-height:1.55;}
+  .howto b{color:var(--ink);}
+
+  /* ---------- Win overlay ---------- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(10,32,54,.62); display:none; align-items:center; justify-content:center;
+    padding:18px; z-index:50;
+  }
+  .overlay.open{display:flex;}
+  .win-card{
+    background:#fff; color:#12314d; border-radius:26px; padding:28px 22px 22px; max-width:440px; width:100%;
+    text-align:center; box-shadow:0 24px 60px rgba(0,0,0,.4); position:relative; overflow:hidden;
+  }
+  .win-card .big{font-size:56px; line-height:1;}
+  .win-card h2{font-family:"Baloo Da 2",sans-serif; font-size:32px; margin:8px 0 4px; font-weight:800;}
+  .win-card p{margin:6px 0; font-size:16.5px; line-height:1.55;}
+  .win-card .stats-line{font-weight:700; background:#eaf8ff; border-radius:14px; padding:10px; margin:14px 0;}
+  .btn-again{
+    background:var(--coral); color:#fff; font-family:"Baloo Da 2",sans-serif; font-weight:800; font-size:21px;
+    padding:13px 30px; border-radius:16px; box-shadow:0 6px 0 var(--coral-dark); width:100%;
+  }
+  .btn-again:active{transform:translateY(4px); box-shadow:0 2px 0 var(--coral-dark);}
+  .confetti{position:absolute; top:-14px; font-size:20px; animation:fall linear forwards; pointer-events:none;}
+  @keyframes fall{to{transform:translateY(560px) rotate(320deg); opacity:.9;}}
+
+  footer{text-align:center; color:var(--ink-soft); font-weight:600; font-size:14px; margin-top:18px;}
+  @media (prefers-reduced-motion: reduce){
+    .cloud,.star-deco{animation:none;}
+    #tarek.bounce,#tarek.superfly,#tarek.spin{animation-duration:.01s;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>তারেক ভাইয়া <span class="pop">উড়ে যাও!</span> 🚀</h1>
+    <p class="tagline">জয়নাবের মজার খেলা — ট্যাপ করলেই ভাইয়া লাফ দিয়ে আকাশে উড়বে! কেউ ব্যথা পায় না, শুধু হাসি, তারা আর উড়াউড়ি। লক্ষ্য: ভাইয়াকে <b>সাত আসমানে</b> পৌঁছে দাও!</p>
+  </header>
+
+  <div class="hud" role="status" aria-live="polite">
+    <div class="stat"><div class="label">উচ্চতা</div><div class="value" id="hudAlt">০ মি</div></div>
+    <div class="stat"><div class="label">আসমান</div><div class="value" id="hudSky">১ম</div></div>
+    <div class="stat"><div class="label">স্কোর</div><div class="value coral" id="hudScore">০</div></div>
+    <div class="stat"><div class="label">কম্বো 🔥</div><div class="value" id="hudCombo">×০</div></div>
+  </div>
+
+  <div class="game">
+    <div class="stage" id="stage" aria-label="খেলার জায়গা — এখানে ট্যাপ করলেও ভাইয়া লাফ দেবে">
+      <div class="sun"></div>
+      <span class="star-deco" style="left:12%;top:16%;">⭐</span>
+      <span class="star-deco" style="left:26%;top:9%;animation-delay:.7s;">✨</span>
+      <span class="star-deco" style="left:64%;top:12%;animation-delay:1.3s;">⭐</span>
+      <div class="cloud" style="width:110px;height:34px;left:6%;top:70px;animation-duration:7s;"></div>
+      <div class="cloud" style="width:150px;height:42px;right:4%;top:130px;animation-duration:9s;"></div>
+      <div class="cloud" style="width:90px;height:28px;left:38%;top:44px;animation-duration:8s;"></div>
+
+      <div class="sky-label" id="skyLabel">🌤️ ১ম আসমান</div>
+      <div class="bubble" id="bubble">জয়নাব থামো!</div>
+
+      <div class="char-zone">
+        <div style="position:relative;">
+          <!-- Cartoon Tarek -->
+          <svg id="tarek" viewBox="0 0 200 240" role="img" aria-label="কার্টুন তারেক ভাইয়া">
+            <!-- legs -->
+            <rect x="76" y="168" width="20" height="46" rx="8" fill="#2f6fb2"/>
+            <rect x="106" y="168" width="20" height="46" rx="8" fill="#2f6fb2"/>
+            <!-- shoes -->
+            <ellipse cx="84" cy="220" rx="17" ry="8" fill="#e04a36"/>
+            <ellipse cx="120" cy="220" rx="17" ry="8" fill="#e04a36"/>
+            <!-- arms -->
+            <g id="armL"><rect x="34" y="104" width="18" height="58" rx="9" fill="#ffb703" transform="rotate(24 43 110)"/></g>
+            <g id="armR"><rect x="148" y="104" width="18" height="58" rx="9" fill="#ffb703" transform="rotate(-24 157 110)"/></g>
+            <!-- body / shirt -->
+            <rect x="62" y="96" width="78" height="80" rx="20" fill="#ffb703"/>
+            <rect x="62" y="140" width="78" height="14" fill="#fb8500"/>
+            <!-- head -->
+            <circle cx="101" cy="58" r="38" fill="#f2c29b"/>
+            <!-- hair -->
+            <path d="M63 54 Q66 18 101 18 Q136 18 139 54 Q126 34 101 34 Q76 34 63 54 Z" fill="#3a2a20"/>
+            <!-- eyes -->
+            <g id="eyesOpen">
+              <circle cx="87" cy="58" r="5" fill="#222"/><circle cx="115" cy="58" r="5" fill="#222"/>
+              <circle cx="88.5" cy="56.5" r="1.8" fill="#fff"/><circle cx="116.5" cy="56.5" r="1.8" fill="#fff"/>
+            </g>
+            <g id="eyesDizzy" style="display:none;" stroke="#222" stroke-width="3.4" stroke-linecap="round">
+              <path d="M80 52 L94 64 M94 52 L80 64"/><path d="M108 52 L122 64 M122 52 L108 64"/>
+            </g>
+            <!-- mouth -->
+            <path id="mouth" d="M88 76 Q101 88 114 76" stroke="#8a4b2a" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+            <!-- cheeks -->
+            <circle cx="74" cy="70" r="6" fill="#f6a97c" opacity=".7"/><circle cx="128" cy="70" r="6" fill="#f6a97c" opacity=".7"/>
+          </svg>
+          <div class="name-tag">তারেক ভাইয়া</div>
+        </div>
+      </div>
+
+      <div class="jainab" aria-hidden="true">
+        <svg viewBox="0 0 120 150">
+          <rect x="46" y="98" width="13" height="30" rx="6" fill="#7b4b94"/>
+          <rect x="63" y="98" width="13" height="30" rx="6" fill="#7b4b94"/>
+          <ellipse cx="50" cy="132" rx="11" ry="5" fill="#12314d"/><ellipse cx="72" cy="132" rx="11" ry="5" fill="#12314d"/>
+          <rect x="20" y="62" width="13" height="38" rx="6.5" fill="#ff8fab" transform="rotate(20 26 66)"/>
+          <rect x="89" y="62" width="13" height="38" rx="6.5" fill="#ff8fab" transform="rotate(-38 95 66)"/>
+          <path d="M38 58 Q61 44 84 58 L88 104 Q61 114 34 104 Z" fill="#ff8fab"/>
+          <circle cx="61" cy="34" r="24" fill="#f2c29b"/>
+          <path d="M37 32 Q39 8 61 8 Q83 8 85 32 Q74 18 61 18 Q48 18 37 32Z" fill="#241a14"/>
+          <circle cx="52" cy="34" r="3.2" fill="#222"/><circle cx="70" cy="34" r="3.2" fill="#222"/>
+          <path d="M52 44 Q61 52 70 44" stroke="#8a4b2a" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+          <circle cx="44" cy="41" r="4" fill="#f6a97c" opacity=".8"/><circle cx="78" cy="41" r="4" fill="#f6a97c" opacity=".8"/>
+        </svg>
+        <span class="n">জয়নাব</span>
+      </div>
+      <div class="jainab-cheer" id="cheer">উড়ে যাও ভাইয়া! 😄</div>
+
+      <div class="ground">
+        <span class="flower" style="left:16%;">🌼</span>
+        <span class="flower" style="left:48%;">🌸</span>
+        <span class="flower" style="left:78%;">🌼</span>
+      </div>
+
+      <div class="banner" id="banner"><span id="bannerText"></span></div>
+    </div>
+
+    <div class="meter" aria-hidden="true">
+      <div class="m-title">সাত<br>আসমান</div>
+      <div class="track">
+        <div class="fill" id="meterFill"></div>
+        <div class="rocket" id="meterRocket">🚀</div>
+        <div class="tick" style="bottom:14.28%;">১ম</div>
+        <div class="tick" style="bottom:28.57%;">২য়</div>
+        <div class="tick" style="bottom:42.85%;">৩য়</div>
+        <div class="tick" style="bottom:57.14%;">৪র্থ</div>
+        <div class="tick" style="bottom:71.42%;">৫ম</div>
+        <div class="tick" style="bottom:85.71%;">৬ষ্ঠ</div>
+        <div class="tick" style="bottom:100%;">৭ম</div>
+      </div>
+      <div class="m-title" id="meterPct">০%</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="power-head">
+      <span class="t">⚡ পাওয়ার মিটার</span>
+      <span class="hint">লাল জায়গায় থাকলে চাপ দাও — সুপার উড়ান!</span>
+    </div>
+    <div class="powerbar"><div class="sweet"></div><div class="marker" id="marker" style="left:0%;"></div></div>
+    <div class="power-labels"><span>হালকা লাফ</span><span>জোরে লাফ</span><span>🚀 সুপার!</span></div>
+    <div class="btn-row">
+      <button class="btn-launch" id="btnLaunch" type="button">🚀 উড়িয়ে দাও!</button>
+      <button class="btn-tap" id="btnTap" type="button">👆 ট্যাপ ট্যাপ!</button>
+    </div>
+    <p class="howto"><b>কীভাবে খেলবে:</b> তারেক ভাইয়ার গায়ে বা বোতামে ট্যাপ করলেই সে লাফ দেবে আর উপরে উঠবে। তাড়াতাড়ি পরপর ট্যাপ করলে <b>কম্বো</b> বাড়বে, আর পাওয়ার মিটার লাল জায়গায় থাকলে <b>“উড়িয়ে দাও!”</b> চাপলে একদম সুপার উড়ান! ধীরে ধীরে ভাইয়া আবার নিচে নেমে আসে, তাই ট্যাপ থামিও না। ৭০০ মিটার উঠলেই সাত আসমান — জয়নাব জিতবে! কীবোর্ডে <b>Space</b> চাপলেও লাফ হবে।</p>
+  </div>
+
+  <footer>ভাই-বোনের মজার খেলা — হাসিই এখানে আসল জিত 💛</footer>
+</div>
+
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+  <div class="win-card" id="winCard">
+    <div class="big">🎉🚀🎉</div>
+    <h2 id="winTitle">সাত আসমান! জয়নাব জিতেছে!</h2>
+    <p>তারেক ভাইয়া তারা ছুঁয়ে ফেলেছে আর হাসতে হাসতে বলছে —<br><b>“হার মানলাম, জয়নাব! তুমিই চ্যাম্পিয়ন!”</b> 🏆</p>
+    <div class="stats-line" id="winStats"></div>
+    <button class="btn-again" id="btnAgain" type="button">🔁 আবার খেলি</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var BN = ["০","১","২","৩","৪","৫","৬","৭","৮","৯"];
+  function bn(n){ return String(Math.floor(n)).replace(/\d/g, function(d){ return BN[+d]; }); }
+  var SKY_NAMES = ["১ম","২য়","৩য়","৪র্থ","৫ম","৬ষ্ঠ","৭ম"];
+  var GOAL = 700, PER_SKY = 100;
+
+  var state = { alt:0, score:0, combo:0, taps:0, bestCombo:0, lastTap:0, won:false, skyReached:1 };
+  var power = 0, powerDir = 1;
+
+  var el = function(id){ return document.getElementById(id); };
+  var stage = el("stage"), tarek = el("tarek"), bubble = el("bubble"), cheer = el("cheer"),
+      skyLabel = el("skyLabel"), banner = el("banner"), bannerText = el("bannerText"),
+      marker = el("marker"), fill = el("meterFill"), rocket = el("meterRocket"), pct = el("meterPct"),
+      hudAlt = el("hudAlt"), hudSky = el("hudSky"), hudScore = el("hudScore"), hudCombo = el("hudCombo"),
+      overlay = el("overlay"), winStats = el("winStats"), winCard = el("winCard"),
+      eyesOpen = el("eyesOpen"), eyesDizzy = el("eyesDizzy"), mouth = el("mouth");
+
+  var bubbleTimer = null, cheerTimer = null;
+  var TAREK_LINE = "জয়নাব থামো!";
+  var cheerLines = ["উড়ে যাও ভাইয়া! 😄","আরেকটা! আরেকটা! 👆","হি হি হি! 😆","সাত আসমান যেতেই হবে! 🚀","তুমি পারবে! 💪"];
+  var fxIcons = ["⭐","💛","✨","🎈","☁️","💫"];
+
+  /* --- tiny pop sounds, synthesized --- */
+  var audioCtx = null;
+  function pop(freq){
+    try{
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if(audioCtx.state === "suspended") audioCtx.resume();
+      var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = "sine"; o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(freq*1.8, audioCtx.currentTime + 0.12);
+      g.gain.setValueAtTime(0.16, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.16);
+      o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + 0.17);
+    }catch(e){ /* sound is optional */ }
+  }
+
+  function say(line, ms){
+    bubble.textContent = line; bubble.classList.add("show");
+    clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(function(){ bubble.classList.remove("show"); }, ms || 1600);
+  }
+  function cheerSay(){
+    cheer.textContent = cheerLines[Math.floor(Math.random()*cheerLines.length)];
+    cheer.classList.add("show");
+    clearTimeout(cheerTimer);
+    cheerTimer = setTimeout(function(){ cheer.classList.remove("show"); }, 1300);
+  }
+  function showBanner(text){
+    bannerText.textContent = text;
+    banner.classList.remove("play"); void banner.offsetWidth; banner.classList.add("play");
+  }
+  function spawnFx(x, y){
+    var r = stage.getBoundingClientRect();
+    var s = document.createElement("span");
+    s.className = "fx"; s.textContent = fxIcons[Math.floor(Math.random()*fxIcons.length)];
+    s.style.left = Math.max(4, Math.min(r.width-34, x - r.left - 12)) + "px";
+    s.style.top = Math.max(4, y - r.top - 14) + "px";
+    stage.appendChild(s);
+    setTimeout(function(){ s.remove(); }, 950);
+  }
+
+  function skyOf(alt){ return Math.min(7, Math.floor(alt / PER_SKY) + 1); }
+
+  function render(){
+    var sky = skyOf(state.alt);
+    hudAlt.textContent = bn(state.alt) + " মি";
+    hudSky.textContent = SKY_NAMES[sky-1];
+    hudScore.textContent = bn(state.score);
+    hudCombo.textContent = "×" + bn(state.combo);
+    skyLabel.textContent = (sky >= 7 ? "🌟 " : sky >= 4 ? "☁️ " : "🌤️ ") + SKY_NAMES[sky-1] + " আসমান";
+    var p = Math.min(100, (state.alt / GOAL) * 100);
+    fill.style.height = p + "%";
+    rocket.style.bottom = p + "%";
+    pct.textContent = bn(p) + "%";
+    /* dizzy funny face at high combo */
+    var dizzy = state.combo >= 8;
+    eyesOpen.style.display = dizzy ? "none" : "";
+    eyesDizzy.style.display = dizzy ? "" : "none";
+    mouth.setAttribute("d", dizzy ? "M88 80 Q101 70 114 80" : "M88 76 Q101 88 114 76");
+  }
+
+  function checkSky(){
+    var sky = skyOf(state.alt);
+    if(sky > state.skyReached){
+      state.skyReached = sky;
+      showBanner("🎉 " + SKY_NAMES[sky-1] + " আসমান!");
+      pop(660); setTimeout(function(){ pop(880); }, 110);
+    }
+  }
+
+  function doTap(kind, x, y){
+    if(state.won) return;
+    var now = Date.now();
+    state.combo = (now - state.lastTap < 1200) ? state.combo + 1 : 1;
+    state.lastTap = now;
+    if(state.combo > state.bestCombo) state.bestCombo = state.combo;
+    state.taps++;
+
+    var gain, isSuper = false;
+    if(kind === "launch"){
+      if(power >= 72 && power <= 88){ gain = 34; isSuper = true; }
+      else if(power >= 55 && power < 100){ gain = 18; }
+      else { gain = 9; }
+    } else {
+      gain = 7 + Math.min(10, Math.floor(state.combo / 3));
+    }
+    state.alt = Math.min(GOAL, state.alt + gain);
+    state.score += gain * 10 + state.combo * 2;
+
+    /* animate character */
+    tarek.classList.remove("bounce","superfly","spin"); void tarek.offsetWidth;
+    if(isSuper){ tarek.classList.add("superfly"); }
+    else if(state.combo > 0 && state.combo % 12 === 0){ tarek.classList.add("spin"); }
+    else { tarek.classList.add("bounce"); }
+    say(TAREK_LINE, 1500);
+
+    /* effects */
+    var r = tarek.getBoundingClientRect();
+    spawnFx(x || (r.left + r.width/2), y || (r.top + 30));
+    if(isSuper){ spawnFx(r.left + 20, r.top + 60); spawnFx(r.right - 20, r.top + 60); }
+    if(state.taps % 4 === 0) cheerSay();
+    pop(isSuper ? 520 : 300 + Math.random()*160);
+
+    checkSky(); render();
+    if(state.alt >= GOAL) win();
+  }
+
+  function win(){
+    state.won = true;
+    pop(523); setTimeout(function(){ pop(659); }, 130); setTimeout(function(){ pop(784); }, 260); setTimeout(function(){ pop(1046); }, 390);
+    winStats.textContent = "স্কোর: " + bn(state.score) + "  •  মোট ট্যাপ: " + bn(state.taps) + "  •  সেরা কম্বো: ×" + bn(state.bestCombo);
+    overlay.classList.add("open");
+    var icons = ["🎉","⭐","🎊","💛","🎈"];
+    for(var i=0;i<26;i++){
+      var c = document.createElement("span");
+      c.className = "confetti"; c.textContent = icons[i % icons.length];
+      c.style.left = (Math.random()*96) + "%";
+      c.style.animationDuration = (1.6 + Math.random()*1.8) + "s";
+      c.style.animationDelay = (Math.random()*0.7) + "s";
+      winCard.appendChild(c);
+      (function(node){ setTimeout(function(){ node.remove(); }, 4600); })(c);
+    }
+  }
+
+  function reset(){
+    state = { alt:0, score:0, combo:0, taps:0, bestCombo:0, lastTap:0, won:false, skyReached:1 };
+    overlay.classList.remove("open");
+    say(TAREK_LINE, 1500);
+    render();
+  }
+
+  /* power meter oscillation */
+  setInterval(function(){
+    power += powerDir * 2.4;
+    if(power >= 100){ power = 100; powerDir = -1; }
+    if(power <= 0){ power = 0; powerDir = 1; }
+    marker.style.left = power + "%";
+  }, 24);
+
+  /* gentle gravity — he floats back down slowly */
+  setInterval(function(){
+    if(state.won) return;
+    if(Date.now() - state.lastTap > 1600 && state.alt > 0){
+      state.alt = Math.max(0, state.alt - 2);
+      if(state.combo > 0 && Date.now() - state.lastTap > 2400) state.combo = 0;
+      render();
+    }
+  }, 320);
+
+  /* controls */
+  el("btnTap").addEventListener("click", function(e){ doTap("tap", e.clientX, e.clientY); });
+  el("btnLaunch").addEventListener("click", function(e){ doTap("launch", e.clientX, e.clientY); });
+  stage.addEventListener("click", function(e){
+    if(e.target.closest("button")) return;
+    doTap("tap", e.clientX, e.clientY);
+  });
+  el("btnAgain").addEventListener("click", reset);
+  document.addEventListener("keydown", function(e){
+    if(e.code === "Space"){ e.preventDefault(); var r = tarek.getBoundingClientRect(); doTap("tap", r.left + r.width/2, r.top + 40); }
+  });
+
+  say(TAREK_LINE, 2600);
+  render();
+})();
+</script>
+</body>
+</html>

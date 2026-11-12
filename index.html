@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"/>
+<meta name="color-scheme" content="dark"/>
+<link rel="icon" href="data:,"/>
+<title>Snatu Chases Tubu — 3D Love Chase</title>
+<style>
+:root{--rose:#ff3d6e;--rose2:#ff7a9c;--gold:#ffc94d;--ink:#fff5f7;--panel:rgba(16,8,24,.82);--panel2:rgba(30,14,36,.94);--line:rgba(255,255,255,.16);}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;height:100%;overflow:hidden;background:#170a22;font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:var(--ink);}
+#game{position:fixed;inset:0;}
+#game canvas{display:block;width:100%;height:100%;touch-action:none;}
+button{font-family:inherit;cursor:pointer;border:none;color:var(--ink);}
+#hud{position:absolute;top:0;left:0;right:0;padding:10px 12px 6px;background:linear-gradient(180deg,rgba(10,4,18,.8),rgba(10,4,18,0));pointer-events:none;z-index:5;}
+.hudrow{display:flex;align-items:center;gap:8px;justify-content:space-between;}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:13px;font-weight:700;white-space:nowrap;}
+.chip b{color:var(--gold);font-variant-numeric:tabular-nums;}
+.chip.pink b{color:var(--rose2);}
+#lives{color:var(--rose);letter-spacing:2px;}
+#gapwrap{margin-top:8px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 12px 10px;}
+#gaplabels{display:flex;justify-content:space-between;font-size:11px;font-weight:800;letter-spacing:.08em;}
+#gaplabels .t{color:#7ee7ff;} #gaplabels .s{color:var(--rose2);}
+#gapbar{position:relative;height:10px;border-radius:99px;background:rgba(255,255,255,.14);margin-top:6px;}
+#gapfill{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,var(--rose),var(--gold));transition:width .25s;}
+#gaprunner{position:absolute;top:50%;transform:translate(-50%,-50%);font-size:16px;transition:left .25s;}
+#gaptext{text-align:center;font-size:12px;margin-top:5px;font-weight:700;}
+#gaptext b{color:var(--gold);font-variant-numeric:tabular-nums;}
+#gaphint{text-align:center;font-size:12px;margin-top:4px;font-weight:800;color:var(--gold);min-height:16px;}
+#gaphint.good{color:#7dff9a;}
+#gaphint.bad{color:#ff8fa8;}
+#controls{position:absolute;left:0;right:0;bottom:0;padding:0 14px calc(14px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:flex-end;z-index:6;pointer-events:none;}
+.ctl-group{display:flex;gap:10px;pointer-events:auto;}
+.ctl{width:62px;height:62px;border-radius:18px;background:rgba(20,10,30,.72);border:1px solid var(--line);font-size:24px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.4);flex-direction:column;}
+.ctl:active{transform:scale(.93);background:rgba(255,61,110,.55);}
+.ctl small{font-size:9px;font-weight:800;letter-spacing:.1em;opacity:.85;}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;z-index:10;background:rgba(10,3,16,.45);}
+.overlay.hidden{display:none;}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:22px;max-width:520px;width:100%;max-height:92dvh;overflow-y:auto;padding:24px 22px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.55);}
+.card h1{margin:10px 0 4px;font-size:clamp(27px,6vw,38px);line-height:1.12;font-weight:900;}
+.card h1 .rose{color:var(--rose);} .card h1 .cyan{color:#7ee7ff;}
+.tagline{margin:6px 0 0;font-size:15px;opacity:.92;line-height:1.5;}
+.howto{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0;text-align:left;}
+.howto div{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:12px;padding:9px 11px;font-size:13px;line-height:1.45;}
+.howto b{color:var(--gold);}
+.bigbtn{display:block;width:100%;padding:15px;border-radius:16px;background:linear-gradient(135deg,var(--rose),#ff8a3d);font-size:18px;font-weight:900;box-shadow:0 10px 26px rgba(255,61,110,.45);margin-top:10px;}
+.bigbtn:active{transform:scale(.98);}
+.ghostbtn{display:block;width:100%;padding:12px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid var(--line);font-size:15px;font-weight:800;margin-top:10px;}
+.smallnote{font-size:12.5px;opacity:.78;margin-top:12px;line-height:1.5;}
+.gift-slot{position:relative;border:2px dashed rgba(255,201,77,.7);border-radius:16px;background:repeating-linear-gradient(45deg,rgba(255,201,77,.06) 0 12px,rgba(255,255,255,.02) 12px 24px);aspect-ratio:4/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px;overflow:hidden;text-align:center;}
+.gift-slot .gift-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;}
+.gift-slot.has-img .gift-img{display:block;}
+.gift-slot.has-img .gift-ph{display:none;}
+.gift-slot .gift-icon{font-size:30px;line-height:1;}
+.gift-slot .gift-ph{font-size:12.5px;font-weight:800;color:var(--gold);line-height:1.4;}
+.gift-slot .gift-sub{font-size:11px;opacity:.78;line-height:1.35;}
+.gift-slot .slot-no{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.6);border:1px solid var(--line);border-radius:8px;font-size:9.5px;font-weight:900;padding:3px 6px;letter-spacing:.03em;z-index:2;white-space:nowrap;}
+.gift-slot .slot-lock{position:absolute;top:8px;right:8px;font-size:13px;z-index:2;}
+.gift-slot.locked{opacity:.68;filter:saturate(.35);}
+.gift-slot.hero{aspect-ratio:16/10;margin:8px 0 4px;}
+.gift-slot.hero .gift-icon{font-size:44px;}
+.gift-slot.hero .gift-ph{font-size:15px;}
+#giftGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;}
+@media(min-width:640px){#giftGrid{grid-template-columns:repeat(3,1fr);}}
+.reward-line{font-size:16.5px;line-height:1.55;margin:8px 0 6px;}
+.reward-line b{color:var(--rose2);}
+.lapbadge{display:inline-block;background:linear-gradient(135deg,var(--rose),#ff8a3d);border-radius:99px;padding:5px 14px;font-weight:900;font-size:13px;letter-spacing:.06em;}
+#toast{position:absolute;top:118px;left:50%;transform:translateX(-50%);z-index:8;background:var(--panel2);border:1px solid var(--gold);color:var(--gold);font-weight:900;font-size:15px;padding:9px 18px;border-radius:99px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;}
+#toast.show{opacity:1;}
+#flash{position:absolute;inset:0;background:radial-gradient(circle,transparent 40%,rgba(255,40,80,.5));opacity:0;pointer-events:none;z-index:4;transition:opacity .12s;}
+#errbox{position:absolute;left:10px;bottom:100px;z-index:50;background:#5b0f1e;color:#ffd7de;font-size:12px;padding:8px 10px;border-radius:8px;max-width:90vw;display:none;white-space:pre-wrap;}
+#pauseBtn{pointer-events:auto;}
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="flash"></div>
+  <div id="hud">
+    <div class="hudrow">
+      <div class="chip pink">LAP <b id="hudLap">1</b>/10</div>
+      <div class="chip">&#10084; <b id="hudHearts">0</b></div>
+      <div class="chip">SCORE <b id="hudScore">0</b></div>
+      <div class="chip" id="lives">&#9829;&#9829;&#9829;</div>
+      <button class="chip" id="pauseBtn" type="button">&#10073;&#10073;</button>
+    </div>
+    <div id="gapwrap">
+      <div id="gaplabels"><span class="s">&#9829; SNATU</span><span id="gapState">DHAWA CHOLCHE</span><span class="t">TUBU</span></div>
+      <div id="gapbar"><div id="gapfill"></div><div id="gaprunner">&#127939;</div></div>
+      <div id="gaptext">Tubu <b id="hudGap">28.0</b> metre shamne — dhorte parlei WIN!</div>
+      <div id="gaphint">Tubu-er lane-e thako — taholei gap kombe!</div>
+    </div>
+  </div>
+  <div id="toast"></div>
+  <div id="controls">
+    <div class="ctl-group">
+      <button class="ctl" id="btnLeft" type="button" aria-label="Left">&#9664;</button>
+      <button class="ctl" id="btnRight" type="button" aria-label="Right">&#9654;</button>
+    </div>
+    <div class="ctl-group">
+      <button class="ctl" id="btnSlide" type="button" aria-label="Slide">&#11015;<small>SLIDE</small></button>
+      <button class="ctl" id="btnJump" type="button" aria-label="Jump">&#11014;<small>JUMP</small></button>
+    </div>
+  </div>
+
+  <div class="overlay" id="startScreen">
+    <div class="card">
+      <div class="lapbadge">3D LOVE CHASE &#8226; TEMPLE-RUN STYLE</div>
+      <h1><span class="rose">SNATU</span> chases <span class="cyan">TUBU</span></h1>
+      <p class="tagline">Tubu palacche, Snatu dhawa korche! <b style="color:var(--gold)">Shudhu doure hobe na</b> — Tubu normally Snatu-r cheye ektu fast, tai buddhi khataiye, skill diye gain korei take dhorte hobe.<br/>Dhorte parlei <b style="color:var(--gold)">prottek lap-e ekta kore reward + ekta gift slot</b> unlock hobe.</p>
+      <div class="howto">
+        <div><b>&#9664; &#9654;</b> Lane change koro — <b>Tubu-er lane-e thaklei</b> gap kombe, onno lane-e thakle se dure sore jabe</div>
+        <div><b>JUMP / SLIDE</b> Badha perfectly par koro — prottek <b>PERFECT clear-e boro gain</b>, por por korle COMBO bare</div>
+        <div><b>Badha</b> Lagle dhakka — <b>speed kome jabe, onek pichiye porba</b>, life o kombe. Tai lane age theke plan koro</div>
+        <div><b>Heart</b> Nile <b>DASH boost</b> — kichukkhon onek fast hoye gap druto kombe</div>
+        <div><b>Sabdhan!</b> Tubu kache ele <b>panic kore aro fast palay</b> ar lane bodlay — sesh muhurte heart/combo bachiye rakho</div>
+        <div><b>Keyboard</b> Arrow keys / WASD o cholbe, Space = jump</div>
+      </div>
+      <button class="bigbtn" id="startBtn" type="button">&#9654; DHAWA START KARO</button>
+      <button class="ghostbtn" id="galleryBtnStart" type="button">&#127873; Gift Gallery — 10 ta Gift Slot Dekho</button>
+      <p class="smallnote">10 ta lap, 10 ta reward, 10 ta alada gift slot. Tubu pore gift er chhobi pathale prottek chhobi tar nirdisto slot-e bosbe.</p>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="catchScreen">
+    <div class="card">
+      <div class="lapbadge" id="catchBadge">LAP 1 COMPLETE</div>
+      <h1>&#127881; Dhore Felse, <span class="rose">Snatu!</span></h1>
+      <p class="reward-line" id="rewardText"></p>
+      <p style="margin:4px 0 0;font-size:13px;font-weight:800;color:var(--gold);letter-spacing:.05em;">&#127873; EI LAP-ER GIFT SLOT — GIFT ER CHHOBI EKHANE BOSBE</p>
+      <div id="catchGiftSlot"></div>
+      <button class="bigbtn" id="nextLapBtn" type="button">&#9654; PORER LAP — Tubu Abar Palabe!</button>
+      <button class="ghostbtn" id="galleryBtnCatch" type="button">&#127873; Gift Gallery Dekho</button>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="overScreen">
+    <div class="card">
+      <div class="lapbadge">GAME OVER</div>
+      <h1>Tubu eibar <span class="cyan">paliye gelo!</span></h1>
+      <p class="tagline" id="overStats"></p>
+      <button class="bigbtn" id="againBtn" type="button">&#8635; ABAR DHAWA KARO</button>
+      <button class="ghostbtn" id="galleryBtnOver" type="button">&#127873; Gift Gallery — Unlock Kora Slot Gula</button>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="winScreen">
+    <div class="card">
+      <div class="lapbadge">&#127942; SHOB LAP COMPLETE</div>
+      <h1><span class="rose">Snatu</span> — Tumi <span style="color:var(--gold)">CHAMPION!</span></h1>
+      <p class="tagline">10 bar Tubu-ke dhore fella! Tubu ar palabe na — se nijei dhora dilo. &#10084;<br/>Shob 10 ta gift slot unlock hoye geche — gallery te dekho.</p>
+      <button class="bigbtn" id="winAgainBtn" type="button">&#8635; NOTUN KORE KHELO</button>
+      <button class="ghostbtn" id="galleryBtnWin" type="button">&#127873; Gift Gallery — 10 ta Slot</button>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="galleryScreen">
+    <div class="card" style="max-width:640px;">
+      <h1 style="font-size:26px;">&#127873; <span class="rose">Gift</span> Gallery</h1>
+      <p class="tagline">Mot <b style="color:var(--gold)">10 ta alada gift slot</b> — proti lap-e ekta kore, alada jayga vag kora. Tubu gift er chhobi pathalei prottek chhobi tar nirdisto slot-e bosbe.</p>
+      <div id="giftGrid"></div>
+      <button class="bigbtn" id="galleryCloseBtn" type="button">&#10005; Bondho Karo</button>
+    </div>
+  </div>
+
+  <div id="errbox"></div>
+</div>
+
+<script src="assets/three.min.js"></script>
+<script>
+"use strict";
+/* ================================================================
+   GIFT SLOTS — Tubu pore gift er chhobi pathale ekhane bosbe.
+   Prottek lap er jonno EKTA kore alada, nirdisto slot.
+   Chhobi add korte: oi lap er img te path bosao, jemon
+   img: "assets/gift-1.jpg" — game nijei oi slot-e chhobi dekhabe.
+   img khali ("") thakle oi slot-e placeholder dekhabe.
+   ================================================================ */
+var GIFT_SLOTS = [
+  { lap:1,  img:"", reward:"Ekta <b>gopon chitthi</b> — Snatu-r jonno Tubu er moner kotha." },
+  { lap:2,  img:"", reward:"Ekta <b>lal golap</b> — prothom dekha Food City restaurant er smriti mone kore." },
+  { lap:3,  img:"", reward:"<b>Chocolate box</b> — dhora porar mishti sasti!" },
+  { lap:4,  img:"", reward:"Ekta <b>cute teddy</b> — ghumer somoy Snatu-r pase thakbe." },
+  { lap:5,  img:"", reward:"<b>Ice-cream date</b> — Tubu khawabe, palanor ar chance nai!" },
+  { lap:6,  img:"", reward:"Ekta <b>haater lekha card</b> — 'Dhore felso, ekhon charba na!'" },
+  { lap:7,  img:"", reward:"<b>Couple bracelet</b> — ek jora, duijoner haate." },
+  { lap:8,  img:"", reward:"<b>Movie night</b> — Snatu-r pochonder cinema, Tubu er khoroche." },
+  { lap:9,  img:"", reward:"Ekta <b>surprise gift box</b> — bhitore ki ache, khullei jana jabe!" },
+  { lap:10, img:"", reward:"<b>SOBCHE BORO GIFT</b> — 23 December, Snatu-r birthday-r ashol surprise!" }
+];
+
+var errbox = document.getElementById('errbox');
+window.onerror = function(m,s,l){ errbox.style.display='block'; errbox.textContent='Error: '+m+' (line '+l+')'; };
+window.addEventListener('unhandledrejection', function(e){ errbox.style.display='block'; errbox.textContent='Error: '+((e.reason&&e.reason.message)||e.reason); });
+
+var LANES = [-2.3, 0, 2.3];
+var S = {
+  mode:'menu', prevMode:'menu', paused:false,
+  lap:1, hearts:0, score:0, lives:3, unlocked:0,
+  gap:28, gapStart:28,
+  lane:0, vy:0, y:0, sliding:0,
+  speed:13, runTime:0, streak:0, invuln:0, boost:0,
+  penalty:0, sameLane:false,
+  shake:0
+};
+
+/* ---------------- three.js setup ---------------- */
+var container = document.getElementById('game');
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(0x2a1138);
+scene.fog = new THREE.Fog(0x401a4d, 32, 115);
+var camera = new THREE.PerspectiveCamera(62, innerWidth/innerHeight, 0.1, 400);
+camera.position.set(0, 5.2, 8.6);
+var renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 1.5));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.12;
+container.insertBefore(renderer.domElement, container.firstChild);
+/* (RoomEnvironment PMREM removed — it made first load very slow on
+   software renderers; the sunset light rig carries the look on its own.) */
+scene.add(new THREE.HemisphereLight(0xffd9ec, 0x2a1840, 0.95));
+var sun = new THREE.DirectionalLight(0xffb066, 1.9);
+sun.position.set(-14, 22, 10); sun.castShadow = true;
+sun.shadow.mapSize.set(1024,1024);
+sun.shadow.camera.left=-16; sun.shadow.camera.right=16; sun.shadow.camera.top=24; sun.shadow.camera.bottom=-34;
+scene.add(sun);
+var rim = new THREE.DirectionalLight(0xff3d6e, 0.7); rim.position.set(8,6,-18); scene.add(rim);
+
+/* sky gradient dome + sun disc */
+(function(){
+  var c=document.createElement('canvas'); c.width=4; c.height=256;
+  var g=c.getContext('2d'), gr=g.createLinearGradient(0,0,0,256);
+  gr.addColorStop(0,'#3b1154'); gr.addColorStop(0.45,'#8a2358'); gr.addColorStop(0.75,'#e85d75'); gr.addColorStop(1,'#ffb066');
+  g.fillStyle=gr; g.fillRect(0,0,4,256);
+  var sky=new THREE.Mesh(new THREE.SphereGeometry(190,24,16), new THREE.MeshBasicMaterial({ map:new THREE.CanvasTexture(c), side:THREE.BackSide, fog:false }));
+  scene.add(sky);
+  var disc=new THREE.Mesh(new THREE.CircleGeometry(10,32), new THREE.MeshBasicMaterial({ color:0xffd98a, fog:false }));
+  disc.position.set(-30,22,-160); scene.add(disc);
+})();
+
+function mat(color, rough, metal){ return new THREE.MeshStandardMaterial({ color:color, roughness:(rough==null?0.75:rough), metalness:metal||0 }); }
+
+/* ground */
+var road = new THREE.Mesh(new THREE.PlaneGeometry(9.4,260), mat(0x35324a,0.95));
+road.rotation.x = -Math.PI/2; road.position.z = -110; road.receiveShadow = true; scene.add(road);
+[-1,1].forEach(function(side){
+  var grass = new THREE.Mesh(new THREE.PlaneGeometry(70,260), mat(0x2e5d43,0.95));
+  grass.rotation.x = -Math.PI/2; grass.position.set(side*(4.7+35), -0.03, -110); grass.receiveShadow = true; scene.add(grass);
+  var edge = new THREE.Mesh(new THREE.BoxGeometry(0.3,0.12,260), new THREE.MeshStandardMaterial({ color:0xffc94d, roughness:0.4, emissive:0x664d00 }));
+  edge.position.set(side*4.85, 0.05, -110); scene.add(edge);
+});
+/* lane divider dashes */
+var dashes = [];
+for (var di=0; di<26; di++){
+  [-1.15, 1.15].forEach(function(x){
+    var d = new THREE.Mesh(new THREE.BoxGeometry(0.14,0.03,2.4), new THREE.MeshStandardMaterial({ color:0xfff2c9, roughness:0.5, emissive:0x33300f }));
+    d.position.set(x, 0.02, -di*8);
+    scene.add(d); dashes.push(d);
+  });
+}
+
+/* scenery: trees, lamps, buildings — recycled */
+var scenery = [];
+function makeTree(){
+  var g = new THREE.Group();
+  var trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.32,1.6,7), mat(0x6b4226,0.9));
+  trunk.position.y = 0.8; trunk.castShadow = true; g.add(trunk);
+  var fol = new THREE.Mesh(new THREE.ConeGeometry(1.5,3.4,8), mat(0x2f7a4a,0.85));
+  fol.position.y = 3.1; fol.castShadow = true; g.add(fol);
+  var fol2 = new THREE.Mesh(new THREE.ConeGeometry(1.05,2.4,8), mat(0x37945a,0.85));
+  fol2.position.y = 4.4; g.add(fol2);
+  return g;
+}
+function makeLamp(){
+  var g = new THREE.Group();
+  var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.11,4.4,6), mat(0x22242e,0.5,0.6));
+  pole.position.y = 2.2; g.add(pole);
+  var bulb = new THREE.Mesh(new THREE.SphereGeometry(0.3,10,10), new THREE.MeshStandardMaterial({ color:0xffe6a3, emissive:0xffb84d, emissiveIntensity:1.6 }));
+  bulb.position.y = 4.5; g.add(bulb);
+  return g;
+}
+function makeBuilding(h, color){
+  var g = new THREE.Group();
+  var b = new THREE.Mesh(new THREE.BoxGeometry(6,h,6), mat(color,0.9));
+  b.position.y = h/2; g.add(b);
+  var winMat = new THREE.MeshStandardMaterial({ color:0xffd98a, emissive:0xcc8f2e, emissiveIntensity:0.9 });
+  for (var i=0;i<6;i++){
+    var w = new THREE.Mesh(new THREE.PlaneGeometry(0.8,1.0), winMat);
+    w.position.set(-1.8 + (i%3)*1.8, 1.6 + Math.floor(i/3)*2.2, 3.02);
+    g.add(w);
+  }
+  return g;
+}
+for (var si=0; si<22; si++){
+  var sideS = si%2===0 ? -1 : 1;
+  var item;
+  if (si%3===0) item = makeLamp();
+  else if (si%3===1) item = makeTree();
+  else item = makeBuilding(6+((si*7)%9), si%2===0 ? 0x4a3550 : 0x3a2c48);
+  var far = si%3===2;
+  item.position.set(sideS * (far ? 13+((si*3)%6) : 6.6+((si*5)%2.4)), 0, -si*9 - 4);
+  if (far) item.position.z -= 6;
+  scene.add(item); scenery.push(item);
+}
+/* floating heart particles in the air */
+var airHearts = [];
+(function(){
+  var shape = heartShape(0.28);
+  var geo = new THREE.ExtrudeGeometry(shape, { depth:0.1, bevelEnabled:false });
+  for (var i=0;i<16;i++){
+    var m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color:0xff5b8a, emissive:0x8f1030, emissiveIntensity:0.7, roughness:0.4 }));
+    m.position.set((Math.random()-0.5)*16, 2.5+Math.random()*3.5, -Math.random()*100);
+    scene.add(m); airHearts.push(m);
+  }
+})();
+function heartShape(s){
+  var sh = new THREE.Shape();
+  sh.moveTo(0, -s*0.9);
+  sh.bezierCurveTo(-s*1.5, 0.1*s, -s*0.8, s*1.2, 0, s*0.45);
+  sh.bezierCurveTo(s*0.8, s*1.2, s*1.5, 0.1*s, 0, -s*0.9);
+  return sh;
+}
+</script>
+
+<script>
+/* ---------------- name label sprites (character er mathar upore naam) ---------------- */
+function makeLabel(text, bg, fg){
+  var c = document.createElement('canvas'); c.width = 320; c.height = 92;
+  var g = c.getContext('2d');
+  g.fillStyle = bg;
+  g.beginPath();
+  var r = 40, w = 320, h = 84;
+  g.moveTo(6+r, 4); g.lineTo(w-6-r, 4); g.quadraticCurveTo(w-6, 4, w-6, 4+r);
+  g.lineTo(w-6, h-6-r+22); g.quadraticCurveTo(w-6, h-2, w-6-r, h-2);
+  g.lineTo(6+r, h-2); g.quadraticCurveTo(6, h-2, 6, h-6-r+22);
+  g.lineTo(6, 4+r); g.quadraticCurveTo(6, 4, 6+r, 4); g.fill();
+  g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 4; g.stroke();
+  g.fillStyle = fg; g.font = '900 46px "Segoe UI", Arial, sans-serif';
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(text, 160, 48);
+  var tex = new THREE.CanvasTexture(c);
+  var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true, depthTest:false }));
+  sp.scale.set(2.3, 0.66, 1); sp.renderOrder = 20;
+  return sp;
+}
+
+/* whisper label — name label er upore, Snatu rege giye bolche:
+   boro, bold, puro contrast-e pora jay emon angry shout bubble */
+function makeWhisperLabel(text){
+  var c = document.createElement('canvas'); c.width = 768; c.height = 150;
+  var g = c.getContext('2d');
+  /* solid deep-rose bubble with a thick white outline — sky/scene er
+     upore jekono light-e shohoje chokhe pore */
+  var w = 736, h = 96, r = 30, x0 = 16, y0 = 10;
+  g.beginPath();
+  g.moveTo(x0+r, y0); g.lineTo(x0+w-r, y0); g.quadraticCurveTo(x0+w, y0, x0+w, y0+r);
+  g.lineTo(x0+w, y0+h-r); g.quadraticCurveTo(x0+w, y0+h, x0+w-r, y0+h);
+  g.lineTo(x0+r, y0+h); g.quadraticCurveTo(x0, y0+h, x0, y0+h-r);
+  g.lineTo(x0, y0+r); g.quadraticCurveTo(x0, y0, x0+r, y0);
+  g.closePath();
+  g.fillStyle = '#c40f4d'; g.fill();
+  g.lineWidth = 7; g.strokeStyle = '#ffffff'; g.stroke();
+  /* pointed speech tail going down toward the head (shout, not thought) */
+  g.beginPath();
+  g.moveTo(352, y0+h-2); g.lineTo(384, y0+h+30); g.lineTo(402, y0+h-2);
+  g.closePath();
+  g.fillStyle = '#c40f4d'; g.fill();
+  g.lineWidth = 5; g.strokeStyle = '#ffffff'; g.stroke();
+  /* angry reactions: vein mark on the left, huffing angry face on the right */
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = '44px "Segoe UI", Arial, sans-serif';
+  g.fillText('\u{1F4A2}', 54, 60);
+  g.font = '50px "Segoe UI", Arial, sans-serif';
+  g.fillText('\u{1F624}', 714, 62);
+  /* the line itself: big, extra-bold white with a dark outline shadow */
+  g.font = '900 42px "Segoe UI", Arial, sans-serif';
+  g.lineWidth = 8; g.strokeStyle = 'rgba(60,0,20,.85)';
+  g.strokeText(text, 384, 60);
+  g.fillStyle = '#ffffff';
+  g.fillText(text, 384, 60);
+  var tex = new THREE.CanvasTexture(c);
+  var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true, depthTest:false, opacity:1 }));
+  sp.scale.set(4.1, 0.8, 1); sp.renderOrder = 21;
+  return sp;
+}
+
+/* ---------------- character builder ---------------- */
+function limb(w,h,d,color,x,y){
+  var pivot = new THREE.Group(); pivot.position.set(x,y,0);
+  var m = new THREE.Mesh(new THREE.CapsuleGeometry(w, h, 3, 8), mat(color, 0.65));
+  m.position.y = -h/2; m.castShadow = true; pivot.add(m);
+  return pivot;
+}
+function makeRunner(opt){
+  var g = new THREE.Group();
+  var body = new THREE.Group(); g.add(body);
+  /* torso */
+  var torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.34, 0.55, 4, 10), mat(opt.shirt, 0.6));
+  torso.position.y = 1.12; torso.castShadow = true; body.add(torso);
+  if (opt.dress){
+    var skirt = new THREE.Mesh(new THREE.ConeGeometry(0.52, 0.62, 12), mat(opt.shirt, 0.6));
+    skirt.position.y = 0.82; skirt.castShadow = true; body.add(skirt);
+  }
+  /* head */
+  var head = new THREE.Mesh(new THREE.SphereGeometry(0.31, 18, 14), mat(0xf2c49b, 0.55));
+  head.position.y = 1.86; head.castShadow = true; body.add(head);
+  /* hair */
+  var hair = new THREE.Mesh(new THREE.SphereGeometry(0.325, 18, 12, 0, Math.PI*2, 0, Math.PI*0.55), mat(opt.hair, 0.8));
+  hair.position.y = 1.90; body.add(hair);
+  if (opt.ponytail){
+    var tail = new THREE.Mesh(new THREE.CapsuleGeometry(0.11, 0.42, 3, 8), mat(opt.hair, 0.8));
+    tail.position.set(0, 1.72, 0.32); tail.rotation.x = 0.5; body.add(tail);
+  } else {
+    var cap = new THREE.Mesh(new THREE.CylinderGeometry(0.33, 0.33, 0.1, 14), mat(0x173a5e, 0.6));
+    cap.position.y = 2.13; body.add(cap);
+  }
+  /* arms + legs */
+  var armL = limb(0.105, 0.5, 0, opt.shirt, -0.46, 1.42);
+  var armR = limb(0.105, 0.5, 0, opt.shirt,  0.46, 1.42);
+  var legL = limb(0.13, 0.55, 0, opt.pants, -0.19, 0.72);
+  var legR = limb(0.13, 0.55, 0, opt.pants,  0.19, 0.72);
+  body.add(armL); body.add(armR); body.add(legL); body.add(legR);
+  /* shoes */
+  [legL, legR].forEach(function(l){
+    var sh = new THREE.Mesh(new THREE.BoxGeometry(0.2,0.11,0.34), mat(0xffffff, 0.45));
+    sh.position.set(0, -0.62, -0.05); l.add(sh);
+  });
+  /* name label above head — MUST: SNATU / TUBU */
+  var label = makeLabel(opt.name, opt.labelBg, '#ffffff');
+  label.position.y = 2.62; g.add(label);
+  var whisper = null;
+  if (opt.whisper){
+    whisper = makeWhisperLabel(opt.whisper);
+    whisper.position.y = 3.62; g.add(whisper);
+  }
+  g.userData = { body:body, armL:armL, armR:armR, legL:legL, legR:legR, label:label, whisper:whisper };
+  scene.add(g);
+  return g;
+}
+var snata = makeRunner({ name:'SNATU', whisper:'Tubu Gift Deeeee........', labelBg:'rgba(214,20,80,.92)', shirt:0xff3d6e, pants:0x571f3d, hair:0x2a1608, dress:true, ponytail:true });
+var tarek = makeRunner({ name:'TUBU', labelBg:'rgba(14,110,160,.92)', shirt:0x1f9db4, pants:0x22304d, hair:0x120c06, dress:false, ponytail:false });
+snata.position.set(0, 0, 0);
+tarek.position.set(0.8, 0, -S.gap);
+tarek.rotation.y = Math.PI; /* facing away (forward = -Z after rotation fix below) */
+snata.rotation.y = Math.PI;
+/* Note: models face +Z by default build; rotating PI makes them face -Z (running direction) */
+
+/* ---------------- obstacles & pickups ---------------- */
+var obstacles = [];
+var OB_TYPES = ['barrier','overhead','rock'];
+function makeObstacleMesh(type){
+  var g = new THREE.Group();
+  if (type === 'barrier'){
+    var b = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.95, 0.3), mat(0xff8a3d, 0.6));
+    b.position.y = 0.48; b.castShadow = true; g.add(b);
+    var stripe = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.2, 0.32), mat(0xffffff, 0.5));
+    stripe.position.y = 0.62; g.add(stripe);
+    var stripe2 = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.2, 0.32), mat(0x23233a, 0.5));
+    stripe2.position.y = 0.3; g.add(stripe2);
+  } else if (type === 'overhead'){
+    var bar = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.5, 0.3), mat(0xffc94d, 0.55));
+    bar.position.y = 1.62; bar.castShadow = true; g.add(bar);
+    [-0.95, 0.95].forEach(function(x){
+      var post = new THREE.Mesh(new THREE.BoxGeometry(0.14, 1.9, 0.14), mat(0x23233a, 0.6));
+      post.position.set(x, 0.95, 0); g.add(post);
+    });
+    var sign = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.3, 0.34), mat(0xff3d6e, 0.5));
+    sign.position.y = 1.62; g.add(sign);
+  } else {
+    var rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.62, 0), mat(0x8b8fa3, 0.95));
+    rock.position.y = 0.45; rock.castShadow = true; rock.rotation.set(0.4, 0.7, 0.2); g.add(rock);
+  }
+  return g;
+}
+function spawnObstacle(z){
+  var type = OB_TYPES[Math.floor(Math.random()*OB_TYPES.length)];
+  var lane = Math.floor(Math.random()*3);
+  var mesh = makeObstacleMesh(type);
+  mesh.position.set(LANES[lane], 0, z);
+  scene.add(mesh);
+  obstacles.push({ mesh:mesh, type:type, lane:lane, passed:false });
+}
+var pickups = [];
+var heartGeo = new THREE.ExtrudeGeometry(heartShape(0.34), { depth:0.14, bevelEnabled:true, bevelSize:0.04, bevelThickness:0.04 });
+var heartMat = new THREE.MeshStandardMaterial({ color:0xff3d6e, emissive:0xa11238, emissiveIntensity:0.85, roughness:0.35 });
+function spawnHearts(z){
+  var lane = Math.floor(Math.random()*3);
+  for (var i=0;i<4;i++){
+    var m = new THREE.Mesh(heartGeo, heartMat);
+    m.position.set(LANES[lane], 1.05, z - i*2.4);
+    scene.add(m);
+    pickups.push({ mesh:m, lane:lane, taken:false });
+  }
+}
+for (var oi=0; oi<7; oi++) spawnObstacle(-30 - oi*24 - Math.random()*8);
+for (var hi=0; hi<4; hi++) spawnHearts(-22 - hi*34 - Math.random()*8);
+
+/* ---------------- audio (synth) ---------------- */
+var AC = null;
+function audio(){ if (!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if (AC && AC.state==='suspended') AC.resume(); return AC; }
+function beep(freq, dur, type, vol, when){
+  var ac = audio(); if (!ac) return;
+  var o = ac.createOscillator(), gn = ac.createGain();
+  o.type = type||'sine'; o.frequency.value = freq;
+  var t = ac.currentTime + (when||0);
+  gn.gain.setValueAtTime(vol||0.12, t);
+  gn.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(gn); gn.connect(ac.destination);
+  o.start(t); o.stop(t + dur + 0.02);
+}
+function sndPickup(){ beep(880, 0.12, 'sine', 0.14); beep(1320, 0.16, 'sine', 0.1, 0.06); }
+function sndJump(){ beep(300, 0.16, 'triangle', 0.12); }
+function sndHit(){ beep(140, 0.28, 'sawtooth', 0.16); }
+function sndCatch(){ [523,659,784,1046,784,1046,1318].forEach(function(f,i){ beep(f, 0.22, 'triangle', 0.14, i*0.11); }); }
+
+/* ---------------- gift slot rendering ---------------- */
+function giftSlotHTML(slot, hero){
+  var unlocked = S.unlocked >= slot.lap;
+  var cls = 'gift-slot' + (hero ? ' hero' : '') + (slot.img ? ' has-img' : '') + (unlocked ? '' : ' locked');
+  var img = slot.img ? '<img class="gift-img" src="'+slot.img+'" alt="Lap '+slot.lap+' gift photo"/>' : '';
+  var lock = unlocked ? '<span class="slot-lock">&#127873;</span>' : '<span class="slot-lock">&#128274;</span>';
+  return '<div class="'+cls+'" data-gift-slot="'+slot.lap+'">'
+    + img + lock
+    + '<span class="slot-no">GIFT SLOT ' + slot.lap + ' &#8226; LAP ' + slot.lap + '</span>'
+    + '<span class="gift-ph"><span class="gift-icon">&#127873;</span><br/>Gift er chhobi ekhane bosbe</span>'
+    + '<span class="gift-sub">' + (unlocked ? 'Unlocked! Tubu chhobi dile ekhanei dekhabe.' : 'Lap ' + slot.lap + ' complete korle unlock hobe') + '</span>'
+    + '</div>';
+}
+function renderGallery(){
+  var html = '';
+  GIFT_SLOTS.forEach(function(s){ html += giftSlotHTML(s, false); });
+  document.getElementById('giftGrid').innerHTML = html;
+}
+
+/* ---------------- UI helpers ---------------- */
+function $(id){ return document.getElementById(id); }
+function show(id){ $(id).classList.remove('hidden'); }
+function hide(id){ $(id).classList.add('hidden'); }
+function toast(msg){
+  var t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(function(){ t.classList.remove('show'); }, 1600);
+}
+function updateHUD(){
+  $('hudLap').textContent = S.lap;
+  $('hudHearts').textContent = S.hearts;
+  $('hudScore').textContent = Math.floor(S.score);
+  var lv = ''; for (var i=0;i<3;i++) lv += i < S.lives ? '\u2665' : '\u2661';
+  $('lives').textContent = lv;
+  $('hudGap').textContent = Math.max(0, S.gap).toFixed(1);
+  var pct = Math.max(0, Math.min(100, (1 - S.gap / S.gapStart) * 100));
+  $('gapfill').style.width = pct + '%';
+  $('gaprunner').style.left = pct + '%';
+  $('gapState').textContent = S.gap < 7 ? 'PRACHE ESE GECHE!' : (S.gap < 15 ? 'KACHE JACCHE...' : 'DHAWA CHOLCHE');
+  var hint = $('gaphint');
+  if (S.mode === 'run'){
+    if (S.penalty > 0){ hint.textContent = 'Dhakka! Speed kome geche — clean clear kore abar gain koro!'; hint.className = 'bad'; }
+    else if (S.boost > 0){ hint.textContent = 'DASH BOOST! Gap druto komche!'; hint.className = 'good'; }
+    else if (S.gap < 9){ hint.textContent = S.sameLane ? 'Tubu panic kore palacche — ei lane-ei thako, charba na!' : 'Tubu panic kore lane bodlacche — tar lane-e jao, naile paliye jabe!'; hint.className = S.sameLane ? 'good' : 'bad'; }
+    else if (S.sameLane){ hint.textContent = 'Ek lane-e acho — gap komche!' + (S.streak >= 3 ? ' COMBO x' + S.streak + '!' : ''); hint.className = 'good'; }
+    else { hint.textContent = 'Tubu-er lane-e jao — onno lane-e thakle gap barbe!'; hint.className = 'bad'; }
+    hint.id = 'gaphint';
+  }
+}
+
+/* ---------------- game flow ---------------- */
+function resetLap(){
+  S.gapStart = 26 + S.lap * 2.5;
+  S.gap = S.gapStart;
+  S.speed = 12 + S.lap * 0.9;
+  S.streak = 0; S.boost = 0; S.penalty = 0; S.sameLane = false;
+  tarek.position.x = LANES[Math.floor(Math.random()*3)];
+  obstacles.forEach(function(o){ scene.remove(o.mesh); });
+  obstacles.length = 0;
+  pickups.forEach(function(p){ scene.remove(p.mesh); });
+  pickups.length = 0;
+  for (var i=0;i<7;i++) spawnObstacle(-32 - i*23 - Math.random()*8);
+  for (var j=0;j<4;j++) spawnHearts(-24 - j*32 - Math.random()*8);
+  updateHUD();
+}
+function startGame(){
+  audio();
+  S.lap = 1; S.hearts = 0; S.score = 0; S.lives = 3; S.unlocked = 0;
+  S.lane = 0; S.y = 0; S.vy = 0; S.sliding = 0; S.invuln = 0; S.runTime = 0;
+  snata.position.set(0,0,0);
+  resetLap();
+  S.mode = 'run'; S.paused = false;
+  hide('startScreen'); hide('overScreen'); hide('winScreen'); hide('catchScreen'); hide('galleryScreen');
+  toast('Lap 1 — Tubu-ke dharo!');
+}
+function catchTubu(){
+  S.mode = 'catch';
+  S.unlocked = Math.max(S.unlocked, S.lap);
+  S.score += 500 + S.lap * 100;
+  sndCatch();
+  burstHearts();
+  $('catchBadge').textContent = 'LAP ' + S.lap + ' COMPLETE — REWARD UNLOCKED';
+  $('rewardText').innerHTML = 'Tubu dhora porlo! Ei lap-er reward:<br/>' + GIFT_SLOTS[S.lap-1].reward;
+  $('catchGiftSlot').innerHTML = giftSlotHTML(GIFT_SLOTS[S.lap-1], true);
+  $('nextLapBtn').textContent = S.lap >= 10 ? '🏆 FINAL RESULT DEKHO' : '▶ PORER LAP ' + (S.lap+1) + ' — Tubu Abar Palabe!';
+  updateHUD();
+  show('catchScreen');
+}
+function nextLap(){
+  hide('catchScreen');
+  if (S.lap >= 10){ S.mode = 'win'; show('winScreen'); return; }
+  S.lap++;
+  S.lives = Math.min(3, S.lives + 1);
+  resetLap();
+  S.mode = 'run';
+  toast('Lap ' + S.lap + ' — Tubu aro fast palacche!');
+}
+function gameOver(){
+  S.mode = 'over';
+  $('overStats').innerHTML = 'Tumi <b style="color:var(--gold)">' + S.unlocked + ' ta lap</b> complete kore <b style="color:var(--gold)">' + S.unlocked + ' ta gift slot</b> unlock korecho.<br/>Score: <b style="color:var(--gold)">' + Math.floor(S.score) + '</b> &#8226; Heart: <b style="color:var(--gold)">' + S.hearts + '</b><br/>Abar chesta koro — Snatu har mane na!';
+  show('overScreen');
+}
+function openGallery(from){
+  S.prevMode = S.mode;
+  renderGallery();
+  show('galleryScreen');
+}
+function closeGallery(){
+  hide('galleryScreen');
+  if (S.prevMode === 'menu') show('startScreen');
+  else if (S.prevMode === 'catch') show('catchScreen');
+  else if (S.prevMode === 'over') show('overScreen');
+  else if (S.prevMode === 'win') show('winScreen');
+}
+
+/* confetti hearts burst on catch */
+var burst = [];
+function burstHearts(){
+  for (var i=0;i<22;i++){
+    var m = new THREE.Mesh(heartGeo, heartMat);
+    m.position.set(tarek.position.x + (Math.random()-0.5)*2, 1.5 + Math.random()*1.5, tarek.position.z + (Math.random()-0.5)*2);
+    m.userData.v = new THREE.Vector3((Math.random()-0.5)*3, 2.5 + Math.random()*3, (Math.random()-0.5)*3);
+    m.userData.life = 1.4;
+    scene.add(m); burst.push(m);
+  }
+}
+</script>
+
+<script>
+/* ---------------- input ---------------- */
+function doLeft(){ if (S.mode!=='run'||S.paused) return; if (S.lane>0){ S.lane--; } }
+function doRight(){ if (S.mode!=='run'||S.paused) return; if (S.lane<2){ S.lane++; } }
+function doJump(){
+  if (S.mode==='menu'){ return; }
+  if (S.mode!=='run'||S.paused) return;
+  if (S.y<=0.01){ S.vy = 9.6; S.sliding = 0; sndJump(); }
+}
+function doSlide(){ if (S.mode!=='run'||S.paused) return; if (S.y>0.01){ S.vy = -14; } S.sliding = 0.75; }
+function bindBtn(id, fn){
+  var el = $(id);
+  el.addEventListener('pointerdown', function(e){ e.preventDefault(); audio(); fn(); });
+}
+bindBtn('btnLeft', doLeft); bindBtn('btnRight', doRight);
+bindBtn('btnJump', doJump); bindBtn('btnSlide', doSlide);
+$('startBtn').addEventListener('click', startGame);
+$('againBtn').addEventListener('click', startGame);
+$('winAgainBtn').addEventListener('click', startGame);
+$('nextLapBtn').addEventListener('click', nextLap);
+$('galleryBtnStart').addEventListener('click', function(){ openGallery(); hide('startScreen'); });
+$('galleryBtnCatch').addEventListener('click', function(){ openGallery(); hide('catchScreen'); });
+$('galleryBtnOver').addEventListener('click', function(){ openGallery(); hide('overScreen'); });
+$('galleryBtnWin').addEventListener('click', function(){ openGallery(); hide('winScreen'); });
+$('galleryCloseBtn').addEventListener('click', closeGallery);
+$('pauseBtn').addEventListener('click', function(){
+  if (S.mode==='run'){ S.paused = !S.paused; toast(S.paused ? 'Paused' : 'Cholche...'); }
+});
+document.addEventListener('keydown', function(e){
+  if (e.key==='ArrowLeft' || e.key==='a' || e.key==='A') doLeft();
+  else if (e.key==='ArrowRight' || e.key==='d' || e.key==='D') doRight();
+  else if (e.key==='ArrowUp' || e.key==='w' || e.key==='W' || e.key===' ') { e.preventDefault(); doJump(); }
+  else if (e.key==='ArrowDown' || e.key==='s' || e.key==='S') doSlide();
+  else if (e.key==='Enter' && S.mode==='menu') startGame();
+});
+var touchX = 0, touchY = 0;
+renderer.domElement.addEventListener('touchstart', function(e){ audio(); touchX = e.touches[0].clientX; touchY = e.touches[0].clientY; }, { passive:true });
+renderer.domElement.addEventListener('touchend', function(e){
+  var dx = e.changedTouches[0].clientX - touchX, dy = e.changedTouches[0].clientY - touchY;
+  if (Math.abs(dx) < 24 && Math.abs(dy) < 24){ doJump(); return; }
+  if (Math.abs(dx) > Math.abs(dy)) { if (dx>0) doRight(); else doLeft(); }
+  else { if (dy<0) doJump(); else doSlide(); }
+}, { passive:true });
+
+/* ---------------- animation helpers ---------------- */
+var phase = 0;
+function animateRunner(g, ph, slide){
+  var u = g.userData;
+  var sw = Math.sin(ph) * 0.9;
+  u.legL.rotation.x = sw; u.legR.rotation.x = -sw;
+  u.armL.rotation.x = -sw * 0.85; u.armR.rotation.x = sw * 0.85;
+  if (slide){
+    u.body.position.y = -0.52; u.body.rotation.x = 0.55;
+  } else {
+    u.body.position.y = Math.abs(Math.sin(ph)) * 0.09;
+    u.body.rotation.x = 0.08;
+  }
+}
+
+/* ---------------- main loop ---------------- */
+var clock = new THREE.Clock();
+var tarekLaneTimer = 0, spawnTimer = 0;
+function frame(){
+  requestAnimationFrame(frame);
+  try {
+    var dt = Math.min(clock.getDelta(), 0.05);
+    var running = (S.mode === 'run' && !S.paused);
+    /* Snatu-r ashol speed: dhakka khele kichukkhon slow, heart nile dash */
+    var effSpeed = S.speed * (S.penalty > 0 ? 0.55 : 1) * (S.boost > 0 ? 1.22 : 1);
+    var scroll = running ? effSpeed : (S.mode === 'menu' ? 4.5 : 0);
+    phase += dt * (running ? effSpeed * 1.35 : 7);
+
+    if (running){
+      S.runTime += dt;
+      /* jump physics */
+      if (S.y > 0 || S.vy > 0){
+        S.y += S.vy * dt; S.vy -= 27 * dt;
+        if (S.y <= 0){ S.y = 0; S.vy = 0; }
+      }
+      if (S.sliding > 0) S.sliding -= dt;
+      if (S.invuln > 0) S.invuln -= dt;
+      if (S.boost > 0) S.boost -= dt;
+      if (S.penalty > 0) S.penalty -= dt;
+      /* ---- skill-based chase: emni emni gap kome na ----
+         Tubu base speed-e Snatu-r cheye ektu fast, tai sudhu doure
+         thakle gap ulta bare. Gain ashe player-er kaj theke:
+         Tubu-er lane-e thaka, PERFECT clear + combo, ar heart dash.
+         Dhakka khele speed kome + onek pichiye pore. */
+      S.sameLane = Math.abs(tarek.position.x - LANES[S.lane]) < 1.15;
+      var drift = 0.85 + S.lap * 0.05;
+      if (S.gap < 9) drift += 0.95; /* kache ele Tubu panic kore aro fast palay */
+      var gain = 0;
+      if (S.sameLane) gain += 1.9 + Math.min(0.8, S.streak * 0.05);
+      if (S.boost > 0) gain += 3.2;
+      if (S.penalty > 0) gain -= 0.8;
+      S.gap += (drift - gain) * dt;
+      S.gap = Math.min(S.gap, S.gapStart + 16);
+      S.score += dt * 12;
+      /* tarek buddhi kore lane bodlay — kache ele aro ghono ghono,
+         ar beshir vag somoy Snatu-r lane theke shore jay */
+      tarekLaneTimer -= dt;
+      if (tarekLaneTimer <= 0){
+        tarekLaneTimer = S.gap < 10 ? 0.9 + Math.random() * 1.1 : 1.6 + Math.random() * 2.0;
+        var pool = [0, 1, 2];
+        if (Math.random() < 0.7) pool = pool.filter(function(i){ return i !== S.lane; });
+        tarek.userData.targetLaneX = LANES[pool[Math.floor(Math.random() * pool.length)]];
+      }
+      /* catch? */
+      if (S.gap <= 1.4){ catchTubu(); }
+      updateHUD();
+    }
+
+    /* player position */
+    var targetX = LANES[S.lane];
+    snata.position.x += (targetX - snata.position.x) * Math.min(1, dt * 11);
+    snata.position.y = S.y;
+    snata.rotation.z = (targetX - snata.position.x) * -0.14;
+    animateRunner(snata, phase, S.sliding > 0 && S.y <= 0.01);
+    /* angry whisper bubble: halka pulse + bob, jeno rege giye bolche */
+    var wsp = snata.userData.whisper;
+    if (wsp){
+      var pu = 1 + Math.sin(phase * 0.5) * 0.045;
+      wsp.scale.set(4.1 * pu, 0.8 * pu, 1);
+      wsp.position.y = 3.62 + Math.sin(phase * 0.32) * 0.05;
+    }
+    snata.visible = !(S.invuln > 0 && Math.floor(S.runTime * 12) % 2 === 0);
+    /* tarek position */
+    var tx = tarek.userData.targetLaneX != null ? tarek.userData.targetLaneX : tarek.position.x;
+    tarek.position.x += (tx - tarek.position.x) * Math.min(1, dt * 2.4);
+    tarek.position.z = -Math.max(1.4, S.gap);
+    tarek.position.y = 0;
+    animateRunner(tarek, phase + 1.3, false);
+    tarek.rotation.y = Math.PI + Math.sin(phase * 0.5) * 0.06;
+
+    /* world scroll */
+    if (scroll > 0){
+      var dz = scroll * dt;
+      dashes.forEach(function(d){ d.position.z += dz; if (d.position.z > 10) d.position.z -= 208; });
+      scenery.forEach(function(it){ it.position.z += dz; if (it.position.z > 14){ it.position.z -= 200; } });
+      airHearts.forEach(function(h){ h.position.z += dz * 0.92; h.rotation.y += dt * 1.6; if (h.position.z > 12){ h.position.z -= 105; h.position.x = (Math.random()-0.5)*16; } });
+
+      /* obstacles */
+      for (var i = obstacles.length-1; i >= 0; i--){
+        var o = obstacles[i];
+        o.mesh.position.z += dz;
+        if (running && !o.passed && o.mesh.position.z > 1.6){
+          /* PERFECT clear: badha na lege par holei instant gain,
+             por por clear korle combo-te gain bare */
+          o.passed = true; S.streak++; S.score += 15;
+          var pg = 1.1 + Math.min(0.9, S.streak * 0.1);
+          S.gap = Math.max(1.2, S.gap - pg);
+          if (S.streak % 5 === 0) toast('PERFECT COMBO x' + S.streak + '! Gap onek komlo!');
+          updateHUD();
+        }
+        if (running && S.invuln <= 0 && Math.abs(o.mesh.position.z) < 0.75 && Math.abs(o.mesh.position.x - snata.position.x) < 1.15){
+          var hit = false;
+          if (o.type === 'overhead'){ if (S.sliding <= 0 && S.y < 1.0) hit = true; }
+          else { if (S.y < 0.72) hit = true; }
+          if (hit){
+            o.passed = true;
+            S.lives--; S.streak = 0; S.invuln = 1.7;
+            S.penalty = 1.6; /* dhakka: kichukkhon speed ordhek */
+            S.boost = 0;
+            S.gap = Math.min(S.gapStart + 16, S.gap + 8);
+            S.shake = 0.45;
+            $('flash').style.opacity = 1; setTimeout(function(){ $('flash').style.opacity = 0; }, 140);
+            sndHit(); toast('Dhakka! Speed komlo, onek pichiye gela!');
+            updateHUD();
+            if (S.lives <= 0){ gameOver(); }
+          }
+        }
+        if (o.mesh.position.z > 13){
+          scene.remove(o.mesh); obstacles.splice(i,1);
+          var farZ = -175 - Math.random()*14;
+          obstacles.forEach(function(x){ farZ = Math.min(farZ, x.mesh.position.z); });
+          spawnObstacle(farZ - 20 - Math.random()*10 - S.lap);
+        }
+      }
+      /* pickups */
+      for (var j = pickups.length-1; j >= 0; j--){
+        var p = pickups[j];
+        p.mesh.position.z += dz;
+        p.mesh.rotation.y += dt * 2.6;
+        p.mesh.position.y = 1.05 + Math.sin(phase * 0.6 + j) * 0.08;
+        if (running && !p.taken && Math.abs(p.mesh.position.z) < 0.9 && Math.abs(p.mesh.position.x - snata.position.x) < 1.15){
+          p.taken = true;
+          S.hearts++; S.score += 25; S.boost = 1.25;
+          sndPickup(); toast('Heart! Speed boost!');
+          scene.remove(p.mesh); pickups.splice(j,1); updateHUD();
+          continue;
+        }
+        if (p.mesh.position.z > 13){
+          scene.remove(p.mesh); pickups.splice(j,1);
+        }
+      }
+      if (running){
+        spawnTimer -= dt;
+        if (spawnTimer <= 0 && pickups.length < 9){
+          spawnTimer = 3.5 + Math.random()*2.5;
+          var fz = -170; obstacles.forEach(function(x){}); 
+          spawnHearts(-150 - Math.random()*30);
+        }
+      }
+    }
+
+    /* burst hearts */
+    for (var b = burst.length-1; b >= 0; b--){
+      var bm = burst[b];
+      bm.position.addScaledVector(bm.userData.v, dt);
+      bm.userData.v.y -= 4.5 * dt;
+      bm.rotation.y += dt * 4;
+      bm.userData.life -= dt;
+      if (bm.userData.life <= 0){ scene.remove(bm); burst.splice(b,1); }
+    }
+
+    /* camera */
+    var shX = 0, shY = 0;
+    if (S.shake > 0){ S.shake -= dt; shX = (Math.random()-0.5) * S.shake * 0.7; shY = (Math.random()-0.5) * S.shake * 0.7; }
+    camera.position.x = snata.position.x * 0.45 + shX;
+    camera.position.y = 5.2 + S.y * 0.35 + shY;
+    camera.position.z = 8.6;
+    camera.lookAt(snata.position.x * 0.55, 1.5, -12);
+
+    renderer.render(scene, camera);
+  } catch(err){
+    errbox.style.display = 'block'; errbox.textContent = 'Error: ' + err.message;
+  }
+}
+updateHUD();
+renderGallery();
+frame();
+
+addEventListener('resize', function(){
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>The Gift Adventure</title>
+    <style>
+      :root {
+        --ink: #ffffff;
+        --plate: rgba(24, 16, 48, 0.72);
+        --plate-strong: rgba(24, 16, 48, 0.88);
+        --gold: #ffcf3f;
+        --pink: #ff6fa5;
+        --violet: #9b6bff;
+        --sky: #57b6ff;
+        --btn: #ff8a3d;
+        --btn-dark: #e56f1d;
+      }
+      * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+      html, body {
+        margin: 0; padding: 0; height: 100%; overflow: hidden;
+        font-family: "Arial Rounded MT Bold", "Helvetica Rounded", ui-rounded, "Segoe UI", system-ui, sans-serif;
+        background: #79c7f2;
+        user-select: none; -webkit-user-select: none;
+        touch-action: none;
+      }
+      #scene { position: fixed; inset: 0; }
+      #scene canvas { display: block; }
+
+      /* ---------- HUD ---------- */
+      .hud { position: fixed; z-index: 10; pointer-events: none; }
+      #clueBar {
+        top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
+        width: min(94vw, 560px);
+        background: var(--plate); color: var(--ink);
+        border: 2px solid rgba(255,255,255,0.35); border-radius: 14px;
+        padding: 10px 16px; text-align: center;
+        font-size: clamp(17px, 4.4vw, 22px); font-weight: 800; line-height: 1.25;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.45);
+      }
+      #clueBar .step { display: block; font-size: 0.62em; letter-spacing: 0.14em; color: var(--gold); text-transform: uppercase; margin-bottom: 2px; }
+      #keysBar {
+        top: max(10px, env(safe-area-inset-top)); right: 10px;
+        background: var(--plate); border: 2px solid rgba(255,255,255,0.35); border-radius: 14px;
+        padding: 8px 12px; display: flex; align-items: center; gap: 6px;
+        color: var(--ink); font-weight: 800; font-size: 15px;
+      }
+      #keysBar svg { width: 26px; height: 26px; }
+      #keysBar .starOff { fill: rgba(255,255,255,0.25); stroke: rgba(255,255,255,0.5); }
+      #keysBar .starOn { fill: var(--gold); stroke: #fff2b0; filter: drop-shadow(0 0 6px rgba(255,207,63,0.9)); }
+      @media (max-width: 700px) {
+        #clueBar { top: 64px; }
+        #keysBar { right: auto; left: 10px; }
+        #compass { top: 158px !important; }
+      }
+      #compass {
+        top: 118px; left: 50%; transform: translateX(-50%);
+        width: 54px; height: 54px; display: flex; align-items: center; justify-content: center;
+      }
+      #compassArrow {
+        width: 0; height: 0;
+        border-left: 16px solid transparent; border-right: 16px solid transparent;
+        border-bottom: 34px solid var(--gold);
+        filter: drop-shadow(0 0 8px rgba(255,207,63,0.95)) drop-shadow(0 2px 3px rgba(0,0,0,0.5));
+        transition: transform 0.12s linear;
+      }
+
+      /* ---------- Controls ---------- */
+      #pad {
+        position: fixed; z-index: 12; left: 14px;
+        bottom: max(14px, env(safe-area-inset-bottom));
+        display: grid; grid-template-columns: 60px 60px 60px; grid-template-rows: 60px 60px 60px;
+        gap: 6px; pointer-events: none;
+      }
+      #pad button, #interactBtn {
+        pointer-events: auto; border: 3px solid rgba(255,255,255,0.75); border-radius: 16px;
+        background: var(--plate-strong); color: #fff; cursor: pointer;
+        font-size: 30px; font-weight: 900; line-height: 1;
+        display: flex; align-items: center; justify-content: center;
+        min-height: 44px; min-width: 44px;
+        box-shadow: 0 4px 0 rgba(0,0,0,0.35);
+      }
+      #pad button:active, #pad button.held { background: var(--btn); transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.35); }
+      #padUp { grid-area: 1 / 2; } #padLeft { grid-area: 2 / 1; } #padDown { grid-area: 3 / 2; } #padRight { grid-area: 2 / 3; }
+      #padMid { grid-area: 2 / 2; background: rgba(24,16,48,0.35) !important; border-style: dashed !important; font-size: 20px !important; }
+      #interactBtn {
+        position: fixed; z-index: 12; right: 14px;
+        bottom: max(24px, env(safe-area-inset-bottom));
+        padding: 16px 22px; font-size: clamp(19px, 5vw, 24px);
+        background: linear-gradient(180deg, #ffa14f, var(--btn)); border-color: #fff;
+        text-shadow: 0 2px 3px rgba(0,0,0,0.35);
+        animation: bounceBtn 0.9s ease-in-out infinite;
+      }
+      #interactBtn[hidden] { display: none; }
+      @keyframes bounceBtn { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+
+      /* ---------- Overlays ---------- */
+      .overlay {
+        position: fixed; inset: 0; z-index: 30;
+        display: flex; align-items: center; justify-content: center;
+        padding: 14px; background: rgba(16, 8, 40, 0.45);
+      }
+      .overlay[hidden] { display: none; }
+      .card {
+        background: linear-gradient(180deg, #fffdf6, #ffefd9);
+        color: #33204d; border-radius: 22px; border: 4px solid #fff;
+        box-shadow: 0 18px 50px rgba(0,0,0,0.45);
+        width: min(94vw, 520px); max-height: 92vh; overflow-y: auto;
+        padding: 26px 24px 24px; text-align: center;
+      }
+      .card h1 { margin: 0 0 8px; font-size: clamp(30px, 8vw, 42px); font-weight: 900; color: #6d28b8; line-height: 1.1; }
+      .card h2 { margin: 0 0 10px; font-size: clamp(24px, 6.5vw, 32px); font-weight: 900; color: #6d28b8; line-height: 1.15; }
+      .card p { font-size: clamp(17px, 4.6vw, 20px); font-weight: 700; line-height: 1.45; margin: 8px 0; }
+      .bigBtn {
+        display: inline-block; margin-top: 14px; padding: 16px 34px;
+        font-family: inherit; font-size: clamp(20px, 5.5vw, 25px); font-weight: 900;
+        color: #fff; background: linear-gradient(180deg, #ffa14f, var(--btn));
+        border: 3px solid #fff; border-radius: 18px; cursor: pointer;
+        box-shadow: 0 6px 0 var(--btn-dark), 0 10px 22px rgba(0,0,0,0.3);
+        text-shadow: 0 2px 3px rgba(0,0,0,0.3); min-height: 56px;
+      }
+      .bigBtn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--btn-dark); }
+      .namesRow { display: flex; justify-content: center; gap: 12px; margin: 14px 0 4px; flex-wrap: wrap; }
+      .nameChip {
+        padding: 9px 20px; border-radius: 999px; color: #fff; font-weight: 900;
+        font-size: clamp(19px, 5vw, 23px); text-shadow: 0 2px 3px rgba(0,0,0,0.35);
+        border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+      }
+      .chipSnata { background: #e8437f; }
+      .chipJainab { background: #7c4dff; }
+
+      /* ---------- Puzzle widgets ---------- */
+      #watchNote { font-size: clamp(19px, 5vw, 23px); color: #b3540a; min-height: 30px; }
+      .flowerRow, .crystalRow, .numRow { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin: 16px 0 6px; }
+      .flowerBtn {
+        width: 76px; height: 76px; border-radius: 50%; border: 4px solid #fff; cursor: pointer;
+        box-shadow: 0 5px 0 rgba(0,0,0,0.25); position: relative; min-height: 44px;
+        transition: transform 0.15s, filter 0.15s;
+      }
+      .flowerBtn::after {
+        content: ""; position: absolute; inset: 24px; border-radius: 50%;
+        background: #fff6c9; border: 3px solid rgba(0,0,0,0.12);
+      }
+      .flowerBtn.lit { filter: brightness(1.65) saturate(1.4); transform: scale(1.18); }
+      .flowerBtn:active { transform: scale(0.94); }
+      .crystalBtn {
+        width: 74px; height: 88px; border: none; cursor: pointer; position: relative; background: transparent; min-height: 44px;
+        transition: transform 0.15s, filter 0.15s;
+      }
+      .crystalBtn .gem {
+        position: absolute; inset: 6px 8px;
+        clip-path: polygon(50% 0%, 100% 32%, 78% 100%, 22% 100%, 0% 32%);
+        border: none; box-shadow: inset 0 0 0 3px rgba(255,255,255,0.5);
+      }
+      .crystalBtn.lit { filter: brightness(1.6); transform: scale(1.15); }
+      .crystalBtn:active { transform: scale(0.93); }
+      .numBtn {
+        width: 84px; height: 84px; border-radius: 20px; border: 4px solid #fff; cursor: pointer;
+        font-family: inherit; font-size: 40px; font-weight: 900; color: #fff;
+        background: linear-gradient(180deg, #8a63ff, #6d28d9);
+        box-shadow: 0 6px 0 #4c1d95; min-height: 44px;
+      }
+      .numBtn:active { transform: translateY(4px); box-shadow: 0 2px 0 #4c1d95; }
+      .shake { animation: shakeX 0.4s ease; }
+      @keyframes shakeX { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-9px); } 75% { transform: translateX(9px); } }
+      #butterflyField {
+        display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+        gap: 8px 16px; min-height: 120px; padding: 14px 8px; margin-top: 8px;
+        background: linear-gradient(180deg, #cdeffd, #e8fbe8); border-radius: 16px; border: 3px dashed #7cc47f;
+      }
+      .bfly { animation: flutter 1.6s ease-in-out infinite; }
+      @keyframes flutter { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-9px) rotate(5deg); } }
+
+      /* ---------- Gift screen ---------- */
+      #giftCard { background: linear-gradient(180deg, #fff8ee, #ffe3f0); }
+      .giftMsg {
+        background: #fff; border: 3px solid #ffd166; border-radius: 16px;
+        padding: 16px 18px; margin: 14px 0; font-size: clamp(18px, 5vw, 21px);
+        font-weight: 700; line-height: 1.5; color: #4a235a;
+      }
+      #starkSlot {
+        border: 4px dashed #b388ff; border-radius: 16px; background: rgba(179,136,255,0.10);
+        padding: 16px; margin: 12px 0 4px;
+      }
+      #starkSlot .slotLabel {
+        display: block; font-size: 14px; font-weight: 900; letter-spacing: 0.12em;
+        text-transform: uppercase; color: #7c4dff; margin-bottom: 6px;
+      }
+      #starkText { font-size: clamp(18px, 5vw, 21px); font-weight: 800; color: #5e35b1; line-height: 1.45; margin: 0; }
+      #starkEdit { margin-top: 10px; }
+      #starkEdit textarea {
+        width: 100%; min-height: 84px; border-radius: 12px; border: 3px solid #b388ff;
+        font-family: inherit; font-size: 18px; font-weight: 700; padding: 10px 12px; color: #33204d;
+        resize: vertical; user-select: text; -webkit-user-select: text;
+      }
+      .smallBtn {
+        margin-top: 10px; padding: 12px 22px; font-family: inherit; font-size: 18px; font-weight: 900;
+        color: #fff; background: linear-gradient(180deg, #9b6bff, #7c4dff);
+        border: 3px solid #fff; border-radius: 14px; cursor: pointer; min-height: 48px;
+        box-shadow: 0 5px 0 #5e35b1; text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+      }
+      .smallBtn:active { transform: translateY(3px); box-shadow: 0 2px 0 #5e35b1; }
+      .ghostBtn { background: linear-gradient(180deg, #bdbdbd, #8d8d8d); box-shadow: 0 5px 0 #616161; }
+
+      #errBox {
+        position: fixed; z-index: 99; left: 10px; right: 10px; bottom: 10px;
+        background: #b71c1c; color: #fff; font-weight: 700; font-size: 15px;
+        padding: 12px 14px; border-radius: 10px; display: none; white-space: pre-wrap;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #interactBtn, .bfly { animation: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scene"></div>
+
+    <!-- HUD -->
+    <div class="hud" id="clueBar"><span class="step" id="clueStep">The Gift Adventure</span><span id="clueText">Follow the golden light!</span></div>
+    <div class="hud" id="keysBar" aria-label="Magic keys collected">
+      <svg viewBox="0 0 24 24"><path class="starOff" id="star0" stroke-width="1.4" d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg>
+      <svg viewBox="0 0 24 24"><path class="starOff" id="star1" stroke-width="1.4" d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg>
+      <svg viewBox="0 0 24 24"><path class="starOff" id="star2" stroke-width="1.4" d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg>
+      <span id="keysText">0 / 3 keys</span>
+    </div>
+    <div class="hud" id="compass"><div id="compassArrow"></div></div>
+
+    <!-- Movement pad -->
+    <div id="pad">
+      <button id="padUp" aria-label="Walk forward">▲</button>
+      <button id="padLeft" aria-label="Walk left">◀</button>
+      <div id="padMid">★</div>
+      <button id="padRight" aria-label="Walk right">▶</button>
+      <button id="padDown" aria-label="Walk back">▼</button>
+    </div>
+    <button id="interactBtn" hidden>Solve the Puzzle!</button>
+
+    <!-- Start screen -->
+    <div class="overlay" id="startOverlay">
+      <div class="card">
+        <h1>The Gift Adventure</h1>
+        <p>Somewhere in this magical garden, a wonderful gift is hiding!</p>
+        <div class="namesRow">
+          <span class="nameChip chipSnata">Snata</span>
+          <span class="nameChip chipJainab">Jainab</span>
+        </div>
+        <p>Walk together, follow the <b>golden light</b>, solve <b>3 little puzzles</b> to win 3 magic keys — then open the gift!</p>
+        <p>Use the arrow pad or the W A S D keys to walk.</p>
+        <button class="bigBtn" id="startBtn">Start the Adventure!</button>
+      </div>
+    </div>
+
+    <!-- Puzzle panel -->
+    <div class="overlay" id="puzzleOverlay" hidden>
+      <div class="card" id="puzzleCard">
+        <h2 id="puzzleTitle">Puzzle</h2>
+        <p id="puzzleText"></p>
+        <p id="watchNote"></p>
+        <div id="puzzleBody"></div>
+        <button class="smallBtn ghostBtn" id="puzzleClose">Keep Walking</button>
+      </div>
+    </div>
+
+    <!-- Gift screen -->
+    <div class="overlay" id="giftOverlay" hidden>
+      <div class="card" id="giftCard">
+        <h1>You Found the Gift!</h1>
+        <p><b>Snata</b> and <b>Jainab</b> did it — three keys, one big adventure, and the gift is open!</p>
+        <div class="giftMsg">For Snata and Jainab — the two brightest stars of this garden. Thank you for playing together, laughing together, and never giving up. This gift is filled with hugs, sparkles, and a whole sky of love!</div>
+        <div id="starkSlot">
+          <span class="slotLabel">★ Stark's own message goes here ★</span>
+          <p id="starkText">This is Stark's special message slot. Stark — tap the button below and write your own words for Snata and Jainab, and they will appear right here inside the gift!</p>
+          <div id="starkEdit" hidden>
+            <textarea id="starkInput" maxlength="300" placeholder="Write your message for Snata and Jainab here…"></textarea>
+            <br />
+            <button class="smallBtn" id="starkSave">Put It in the Gift</button>
+          </div>
+          <button class="smallBtn" id="starkEditBtn">Write Stark's Message</button>
+        </div>
+        <button class="bigBtn" id="againBtn">Play Again!</button>
+      </div>
+    </div>
+
+    <div id="errBox"></div>
+
+    <script>
+      window.addEventListener('error', function (e) {
+        var b = document.getElementById('errBox');
+        b.style.display = 'block';
+        b.textContent = 'Oops! Something went wrong: ' + (e.message || 'unknown error');
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        var b = document.getElementById('errBox');
+        b.style.display = 'block';
+        b.textContent = 'Oops! Something went wrong: ' + (e.reason && e.reason.message ? e.reason.message : 'unknown error');
+      });
+    </script>
+    <script src="assets/three.min.js"></script>
+    <script>
+    (function () {
+      'use strict';
+
+      /* ================= Audio (synthesized, starts on first tap) ================= */
+      var actx = null;
+      function audio() {
+        if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { actx = null; } }
+        if (actx && actx.state === 'suspended') { actx.resume(); }
+        return actx;
+      }
+      function tone(freq, t0, dur, type, vol) {
+        var a = audio(); if (!a) return;
+        var o = a.createOscillator(), g = a.createGain();
+        o.type = type || 'sine'; o.frequency.value = freq;
+        var t = a.currentTime + t0;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(vol || 0.16, t + 0.03);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        o.connect(g); g.connect(a.destination);
+        o.start(t); o.stop(t + dur + 0.05);
+      }
+      function sndTap() { tone(660, 0, 0.12, 'triangle', 0.14); }
+      function sndGood() { tone(523, 0, 0.16, 'sine', 0.16); tone(659, 0.09, 0.16, 'sine', 0.16); tone(784, 0.18, 0.3, 'sine', 0.18); }
+      function sndKey() { [523, 659, 784, 1047, 1319].forEach(function (f, i) { tone(f, i * 0.09, 0.28, 'triangle', 0.17); }); }
+      function sndOops() { tone(300, 0, 0.18, 'sine', 0.12); tone(240, 0.14, 0.24, 'sine', 0.12); }
+      function sndGift() { [392, 523, 659, 784, 1047, 784, 1047, 1319, 1568].forEach(function (f, i) { tone(f, i * 0.11, 0.34, 'triangle', 0.16); }); }
+
+      /* ================= Three.js scene ================= */
+      var container = document.getElementById('scene');
+      var renderer = new THREE.WebGLRenderer({ antialias: true });
+      function fitPixelRatio() {
+        var pr = Math.min(window.devicePixelRatio || 1, 1.5);
+        var area = window.innerWidth * window.innerHeight * pr * pr;
+        var maxPix = 1700000; // keeps big screens smooth even on weak GPUs
+        if (area > maxPix) pr = Math.sqrt(maxPix / (window.innerWidth * window.innerHeight));
+        renderer.setPixelRatio(pr);
+      }
+      fitPixelRatio();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFShadowMap;
+      renderer.outputEncoding = THREE.sRGBEncoding;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.12;
+      container.appendChild(renderer.domElement);
+
+      var scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x8fd3f7);
+      scene.fog = new THREE.Fog(0xaadcf7, 55, 120);
+
+      var camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 300);
+
+      // Environment map is generated after the first frames so the page
+      // becomes interactive immediately (software renderers are slow at this).
+      setTimeout(function () {
+        try {
+          var pmrem = new THREE.PMREMGenerator(renderer);
+          scene.environment = pmrem.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+        } catch (e) { /* metals still shade from lights alone */ }
+      }, 2500);
+
+      var sun = new THREE.DirectionalLight(0xfff3d6, 1.35);
+      sun.position.set(18, 30, 12);
+      sun.castShadow = true;
+      sun.shadow.mapSize.set(1024, 1024);
+      sun.shadow.camera.left = -40; sun.shadow.camera.right = 40;
+      sun.shadow.camera.top = 40; sun.shadow.camera.bottom = -40;
+      sun.shadow.camera.far = 90;
+      scene.add(sun);
+      scene.add(new THREE.HemisphereLight(0xcfeaff, 0x5f9e57, 0.75));
+      var rim = new THREE.DirectionalLight(0xffd9ec, 0.35);
+      rim.position.set(-20, 14, -18);
+      scene.add(rim);
+
+      function mat(color, rough, metal) {
+        return new THREE.MeshStandardMaterial({ color: color, roughness: rough == null ? 0.75 : rough, metalness: metal == null ? 0 : metal });
+      }
+
+      /* ================= World ================= */
+      var WORLD_R = 34;
+      var ground = new THREE.Mesh(new THREE.CircleGeometry(60, 48), mat(0x69b95e, 0.95));
+      ground.rotation.x = -Math.PI / 2;
+      ground.receiveShadow = true;
+      scene.add(ground);
+
+      // Winding path of flat stones from start to the gift
+      var pathPts = [new THREE.Vector2(0, 20), new THREE.Vector2(-4, 12), new THREE.Vector2(-9, 5), new THREE.Vector2(-6, -3),
+                     new THREE.Vector2(1, -8), new THREE.Vector2(8, -12), new THREE.Vector2(6, -19), new THREE.Vector2(0, -24)];
+      var pathGroup = new THREE.Group();
+      for (var pi = 0; pi < pathPts.length - 1; pi++) {
+        var a = pathPts[pi], b = pathPts[pi + 1], steps = 5;
+        for (var si = 0; si < steps; si++) {
+          var t = si / steps;
+          var stone = new THREE.Mesh(new THREE.CylinderGeometry(1.15 + Math.random() * 0.35, 1.25 + Math.random() * 0.35, 0.16, 9), mat(0xe8dcc0, 0.9));
+          stone.position.set(a.x + (b.x - a.x) * t + (Math.random() - 0.5) * 0.7, 0.08, a.y + (b.y - a.y) * t + (Math.random() - 0.5) * 0.7);
+          stone.receiveShadow = true;
+          pathGroup.add(stone);
+        }
+      }
+      scene.add(pathGroup);
+
+      var obstacles = []; // {x, z, r}
+      function addObstacle(x, z, r) { obstacles.push({ x: x, z: z, r: r }); }
+
+      // Trees: trunk + layered foliage spheres, two colour families
+      function makeTree(x, z, s, leafColor) {
+        var g = new THREE.Group();
+        var trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.32 * s, 0.48 * s, 2.4 * s, 8), mat(0x8a5a33, 0.9));
+        trunk.position.y = 1.2 * s; trunk.castShadow = true; g.add(trunk);
+        var leafMat = mat(leafColor, 0.85);
+        [[0, 3.6, 0, 1.7], [-0.9, 2.9, 0.3, 1.2], [0.95, 3.0, -0.3, 1.25], [0.2, 4.4, -0.4, 1.1]].forEach(function (p) {
+          var ball = new THREE.Mesh(new THREE.SphereGeometry(p[3] * s, 14, 12), leafMat);
+          ball.position.set(p[0] * s, p[1] * s, p[2] * s); ball.castShadow = true; g.add(ball);
+        });
+        g.position.set(x, 0, z);
+        g.rotation.y = Math.random() * Math.PI * 2;
+        scene.add(g);
+        addObstacle(x, z, 0.85 * s);
+        return g;
+      }
+      var treeSpots = [[-20, 14], [-26, 2], [-18, -14], [-24, -24], [20, 16], [27, 4], [19, -16], [25, -26],
+                       [-12, 22], [13, 24], [-30, -8], [30, -10], [-8, -28], [12, -29], [-28, 20], [28, 22], [17, 8], [-16, -4]];
+      treeSpots.forEach(function (p, i) { makeTree(p[0], p[1], 0.9 + (i % 4) * 0.22, i % 3 === 0 ? 0x3f9e4d : (i % 3 === 1 ? 0x57b84a : 0x2f8f5b)); });
+
+      // Colourful flower dots all over the meadow
+      var flowerColors = [0xff5d8f, 0xffcf3f, 0xff8a3d, 0x9b6bff, 0xffffff, 0xff6b6b];
+      var flowerGeo = new THREE.SphereGeometry(0.16, 8, 6);
+      for (var fi = 0; fi < 70; fi++) {
+        var fa = Math.random() * Math.PI * 2, fr = 6 + Math.random() * 30;
+        var fx = Math.cos(fa) * fr, fz = Math.sin(fa) * fr;
+        var fl = new THREE.Mesh(flowerGeo, mat(flowerColors[fi % flowerColors.length], 0.6));
+        fl.position.set(fx, 0.22, fz);
+        fl.scale.y = 0.7;
+        scene.add(fl);
+        var stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.24, 5), mat(0x3e8e41, 0.9));
+        stem.position.set(fx, 0.1, fz);
+        scene.add(stem);
+      }
+
+      // Soft clouds
+      var cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1 });
+      var clouds = [];
+      for (var ci = 0; ci < 6; ci++) {
+        var cl = new THREE.Group();
+        for (var cj = 0; cj < 4; cj++) {
+          var puff = new THREE.Mesh(new THREE.SphereGeometry(1.6 + Math.random() * 1.4, 10, 8), cloudMat);
+          puff.position.set(cj * 2.1 - 3, Math.random() * 0.7, Math.random() * 1.4 - 0.7);
+          puff.scale.y = 0.55;
+          cl.add(puff);
+        }
+        cl.position.set(-45 + ci * 17, 17 + Math.random() * 5, -30 + Math.random() * 45);
+        scene.add(cl); clouds.push(cl);
+      }
+
+      // Pond near the butterfly station
+      var pond = new THREE.Mesh(new THREE.CircleGeometry(4.4, 26), new THREE.MeshStandardMaterial({ color: 0x4fc3e8, roughness: 0.25, metalness: 0.1 }));
+      pond.rotation.x = -Math.PI / 2; pond.position.set(15, 0.04, -6); pond.receiveShadow = true;
+      scene.add(pond);
+      var pondRing = new THREE.Mesh(new THREE.TorusGeometry(4.4, 0.28, 8, 30), mat(0xd9c9a3, 0.95));
+      pondRing.rotation.x = Math.PI / 2; pondRing.position.set(15, 0.1, -6);
+      scene.add(pondRing);
+      addObstacle(15, -6, 4.6);
+
+      // Arch gate near the crystal station
+      var arch = new THREE.Group();
+      var archMat = mat(0xb08968, 0.8);
+      [-2.6, 2.6].forEach(function (x) {
+        var post = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.42, 5.4, 10), archMat);
+        post.position.set(x, 2.7, 0); post.castShadow = true; arch.add(post);
+      });
+      var beam = new THREE.Mesh(new THREE.BoxGeometry(6.6, 0.7, 0.8), archMat);
+      beam.position.y = 5.5; beam.castShadow = true; arch.add(beam);
+      var vine = new THREE.Mesh(new THREE.TorusGeometry(2.9, 0.16, 6, 22, Math.PI), mat(0x4caf50, 0.85));
+      vine.position.y = 5.15; arch.add(vine);
+      arch.position.set(-11, 0, -15);
+      arch.rotation.y = 0.5;
+      scene.add(arch);
+      addObstacle(-12.4, -13.6, 0.8); addObstacle(-9.7, -16.4, 0.8);
+
+      /* ================= Characters ================= */
+      function makeLabel(text, bg) {
+        var c = document.createElement('canvas'); c.width = 512; c.height = 128;
+        var x = c.getContext('2d');
+        x.fillStyle = bg;
+        var r = 52, w = 512, h = 104, y0 = 12;
+        x.beginPath();
+        x.moveTo(r, y0); x.lineTo(w - r, y0); x.arc(w - r, y0 + r, r, -Math.PI / 2, Math.PI / 2);
+        x.lineTo(r, y0 + h); x.arc(r, y0 + r, r, Math.PI / 2, Math.PI * 1.5);
+        x.closePath(); x.fill();
+        x.lineWidth = 7; x.strokeStyle = '#ffffff'; x.stroke();
+        x.font = '900 62px "Arial Rounded MT Bold", Arial, sans-serif';
+        x.textAlign = 'center'; x.textBaseline = 'middle';
+        x.fillStyle = '#ffffff';
+        x.shadowColor = 'rgba(0,0,0,0.4)'; x.shadowBlur = 5; x.shadowOffsetY = 3;
+        x.fillText(text, 256, 66);
+        var tex = new THREE.CanvasTexture(c);
+        tex.encoding = THREE.sRGBEncoding;
+        var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
+        sp.scale.set(3.4, 0.85, 1);
+        return sp;
+      }
+
+      function makeGirl(opts) {
+        var g = new THREE.Group();
+        var skin = mat(0xffcf9f, 0.6);
+        var dressMat = mat(opts.dress, 0.55);
+        var hairMat = mat(opts.hair, 0.7);
+        // dress (cone with rounded rim)
+        var dress = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.78, 1.25, 18), dressMat);
+        dress.position.y = 0.85; dress.castShadow = true; g.add(dress);
+        var sash = new THREE.Mesh(new THREE.TorusGeometry(0.36, 0.07, 8, 20), mat(opts.accent, 0.4));
+        sash.rotation.x = Math.PI / 2; sash.position.y = 1.42; g.add(sash);
+        // head
+        var head = new THREE.Mesh(new THREE.SphereGeometry(0.46, 20, 16), skin);
+        head.position.y = 1.98; head.castShadow = true; g.add(head);
+        // hair cap + bun / ponytail
+        var hair = new THREE.Mesh(new THREE.SphereGeometry(0.49, 20, 14, 0, Math.PI * 2, 0, Math.PI * 0.55), hairMat);
+        hair.position.y = 2.06; g.add(hair);
+        var bun = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), hairMat);
+        bun.position.set(0, 2.42, -0.32); g.add(bun);
+        var bow = new THREE.Group();
+        var bowMat = mat(opts.accent, 0.45);
+        [-0.13, 0.13].forEach(function (bx) {
+          var wing = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 6), bowMat);
+          wing.position.set(bx, 0, 0); wing.scale.set(1.2, 0.7, 0.5); bow.add(wing);
+        });
+        bow.position.set(0.22, 2.48, 0.1); g.add(bow);
+        // eyes
+        var eyeMat = new THREE.MeshBasicMaterial({ color: 0x33231a });
+        [-0.16, 0.16].forEach(function (ex) {
+          var eye = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), eyeMat);
+          eye.position.set(ex, 2.02, 0.42); g.add(eye);
+        });
+        var smile = new THREE.Mesh(new THREE.TorusGeometry(0.11, 0.025, 6, 12, Math.PI), new THREE.MeshBasicMaterial({ color: 0xb3543f }));
+        smile.position.set(0, 1.88, 0.43); smile.rotation.z = Math.PI; g.add(smile);
+        // arms (pivot at shoulder for swinging)
+        var arms = [];
+        [-1, 1].forEach(function (side) {
+          var pivot = new THREE.Group();
+          pivot.position.set(side * 0.42, 1.42, 0);
+          var arm = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.72, 8), skin);
+          arm.position.y = -0.32; arm.castShadow = true; pivot.add(arm);
+          var sleeve = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 6), dressMat);
+          sleeve.position.y = -0.02; pivot.add(sleeve);
+          g.add(pivot); arms.push(pivot);
+        });
+        // shoes
+        [-0.2, 0.2].forEach(function (sx) {
+          var shoe = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 6), mat(opts.accent, 0.4));
+          shoe.position.set(sx, 0.1, 0.06); shoe.scale.set(1, 0.6, 1.5); g.add(shoe);
+        });
+        var label = makeLabel(opts.name, opts.labelBg);
+        label.position.y = 3.15;
+        g.add(label);
+        scene.add(g);
+        return { group: g, arms: arms, label: label };
+      }
+
+      var snata = makeGirl({ name: 'Snata', dress: 0xe8437f, accent: 0xffcf3f, hair: 0x4a2c14, labelBg: 'rgba(190,30,90,0.92)' });
+      var jainab = makeGirl({ name: 'Jainab', dress: 0x7c4dff, accent: 0xff8ac2, hair: 0x2b1a10, labelBg: 'rgba(94,53,177,0.92)' });
+      jainab.group.scale.setScalar(0.82); // little sister is smaller
+
+      /* ================= Stations, keys, beacon, gift ================= */
+      function makeKey(color) {
+        var g = new THREE.Group();
+        var km = new THREE.MeshStandardMaterial({ color: color, roughness: 0.25, metalness: 0.85, emissive: color, emissiveIntensity: 0.25 });
+        var bowRing = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.1, 8, 18), km);
+        bowRing.position.y = 0.42; g.add(bowRing);
+        var shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.85, 8), km);
+        shaft.position.y = -0.2; g.add(shaft);
+        [0.28, -0.02].forEach(function (yy, i) {
+          var tooth = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.12, 0.12), km);
+          tooth.position.set(0.16, yy - 0.55, 0); g.add(tooth);
+        });
+        g.traverse(function (o) { o.castShadow = true; });
+        return g;
+      }
+
+      function makeStationRing(x, z, color) {
+        var ring = new THREE.Mesh(new THREE.TorusGeometry(2.5, 0.14, 8, 36),
+          new THREE.MeshStandardMaterial({ color: color, roughness: 0.4, emissive: color, emissiveIntensity: 0.55 }));
+        ring.rotation.x = Math.PI / 2;
+        ring.position.set(x, 0.18, z);
+        scene.add(ring);
+        return ring;
+      }
+
+      var stations = [
+        { id: 'flowers', name: 'Rainbow Flower Garden', x: -13, z: 6, color: 0xff5d8f, keyColor: 0xff5d8f, solved: false,
+          clue: 'Follow the golden light to the Rainbow Flowers!', step: 'Puzzle 1 of 3' },
+        { id: 'pond', name: 'Butterfly Pond', x: 15, z: -6, color: 0x38b6e3, keyColor: 0x38b6e3, solved: false,
+          clue: 'The golden light leads to the Butterfly Pond!', step: 'Puzzle 2 of 3' },
+        { id: 'crystals', name: 'Crystal Arch', x: -11, z: -15, color: 0x9b6bff, keyColor: 0x9b6bff, solved: false,
+          clue: 'One more puzzle — the Crystal Arch is glowing!', step: 'Puzzle 3 of 3' }
+      ];
+      stations.forEach(function (s) {
+        s.ring = makeStationRing(s.x, s.z, s.color);
+        s.key = makeKey(s.keyColor);
+        s.key.position.set(s.x, 2.1, s.z);
+        s.key.visible = false;
+        scene.add(s.key);
+      });
+      // decorative flowers cluster at flower station
+      for (var dfi = 0; dfi < 10; dfi++) {
+        var dfa = (dfi / 10) * Math.PI * 2;
+        var df = new THREE.Mesh(new THREE.SphereGeometry(0.34, 10, 8), mat(flowerColors[dfi % flowerColors.length], 0.5));
+        df.position.set(-13 + Math.cos(dfa) * 1.8, 0.4, 6 + Math.sin(dfa) * 1.8);
+        df.castShadow = true;
+        scene.add(df);
+      }
+      // decorative crystals at crystal station
+      var crystalCols = [0x57b6ff, 0xff5d8f, 0x51d88a, 0xffcf3f];
+      crystalCols.forEach(function (cc, i) {
+        var cry = new THREE.Mesh(new THREE.ConeGeometry(0.42, 1.5 + i * 0.18, 6),
+          new THREE.MeshStandardMaterial({ color: cc, roughness: 0.2, metalness: 0.1, emissive: cc, emissiveIntensity: 0.3 }));
+        cry.position.set(-13.5 + i * 1.7, 0.75, -18.6);
+        cry.castShadow = true;
+        scene.add(cry);
+      });
+      // butterflies fluttering over the pond
+      var bflies = [];
+      var bfColors = [0xff8ac2, 0xffcf3f, 0x9b6bff, 0xff8a3d, 0x57b6ff];
+      for (var bi = 0; bi < 5; bi++) {
+        var bg = new THREE.Group();
+        var bm = mat(bfColors[bi], 0.5);
+        [-1, 1].forEach(function (side) {
+          var wing = new THREE.Mesh(new THREE.CircleGeometry(0.22, 10), new THREE.MeshStandardMaterial({ color: bfColors[bi], roughness: 0.5, side: THREE.DoubleSide }));
+          wing.position.x = side * 0.2; wing.rotation.y = side * 0.5;
+          bg.add(wing);
+        });
+        var body = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 6), mat(0x333333, 0.6));
+        body.scale.set(0.7, 0.7, 1.6); bg.add(body);
+        bg.position.set(15 + (Math.random() - 0.5) * 5, 1.4 + Math.random(), -6 + (Math.random() - 0.5) * 5);
+        scene.add(bg);
+        bflies.push({ g: bg, seed: Math.random() * 10, cx: bg.position.x, cz: bg.position.z });
+      }
+
+      // The gift on its flowery hill
+      var giftPos = { x: 0, z: -26 };
+      var hill = new THREE.Mesh(new THREE.CylinderGeometry(4.6, 5.6, 0.7, 24), mat(0x7cc46a, 0.95));
+      hill.position.set(giftPos.x, 0.35, giftPos.z); hill.receiveShadow = true;
+      scene.add(hill);
+      addObstacle(giftPos.x, giftPos.z, 1.7);
+      var gift = new THREE.Group();
+      var giftBoxMat = mat(0xd6336c, 0.35);
+      var ribbonMat = new THREE.MeshStandardMaterial({ color: 0xffcf3f, roughness: 0.3, metalness: 0.5, emissive: 0xffcf3f, emissiveIntensity: 0.15 });
+      var gbox = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.5, 2.1), giftBoxMat);
+      gbox.position.y = 0.75; gbox.castShadow = true; gift.add(gbox);
+      var rib1 = new THREE.Mesh(new THREE.BoxGeometry(0.42, 1.54, 2.14), ribbonMat); rib1.position.y = 0.75; gift.add(rib1);
+      var rib2 = new THREE.Mesh(new THREE.BoxGeometry(2.14, 1.54, 0.42), ribbonMat); rib2.position.y = 0.75; gift.add(rib2);
+      var lidGroup = new THREE.Group();
+      lidGroup.position.set(-1.15, 1.5, 0);
+      var lid = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.34, 2.3), giftBoxMat);
+      lid.position.set(1.15, 0.17, 0); lid.castShadow = true; lidGroup.add(lid);
+      var lidRib = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.38, 2.34), ribbonMat);
+      lidRib.position.set(1.15, 0.17, 0); lidGroup.add(lidRib);
+      var bowG = new THREE.Group();
+      [-0.3, 0.3].forEach(function (bx) {
+        var loop = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.09, 8, 16), ribbonMat);
+        loop.position.set(bx, 0.1, 0); loop.rotation.z = bx > 0 ? -0.5 : 0.5; bowG.add(loop);
+      });
+      bowG.position.set(1.15, 0.42, 0); lidGroup.add(bowG);
+      gift.add(lidGroup);
+      var giftGlow = new THREE.PointLight(0xffd166, 0, 12);
+      giftGlow.position.set(0, 2.2, 0);
+      gift.add(giftGlow);
+      gift.position.set(giftPos.x, 0.7, giftPos.z);
+      scene.add(gift);
+
+      // Golden beacon of light at the current target
+      var beacon = new THREE.Group();
+      var beamMat = new THREE.MeshBasicMaterial({ color: 0xffdf6b, transparent: true, opacity: 0.32, depthWrite: false, side: THREE.DoubleSide });
+      var beamMesh = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.7, 26, 18, 1, true), beamMat);
+      beamMesh.position.y = 13;
+      beacon.add(beamMesh);
+      var beaconRing = new THREE.Mesh(new THREE.TorusGeometry(2.1, 0.16, 8, 36),
+        new THREE.MeshBasicMaterial({ color: 0xffe873, transparent: true, opacity: 0.9 }));
+      beaconRing.rotation.x = Math.PI / 2; beaconRing.position.y = 0.25;
+      beacon.add(beaconRing);
+      scene.add(beacon);
+
+      // Ambient sparkles
+      function sparkTexture() {
+        var c = document.createElement('canvas'); c.width = 64; c.height = 64;
+        var x = c.getContext('2d');
+        var grad = x.createRadialGradient(32, 32, 2, 32, 32, 30);
+        grad.addColorStop(0, 'rgba(255,255,255,1)');
+        grad.addColorStop(0.4, 'rgba(255,240,180,0.85)');
+        grad.addColorStop(1, 'rgba(255,240,180,0)');
+        x.fillStyle = grad; x.fillRect(0, 0, 64, 64);
+        return new THREE.CanvasTexture(c);
+      }
+      var sparkCount = 240;
+      var sparkPos = new Float32Array(sparkCount * 3);
+      var sparkSeed = new Float32Array(sparkCount);
+      for (var spi = 0; spi < sparkCount; spi++) {
+        var spa = Math.random() * Math.PI * 2, spr = Math.random() * 36;
+        sparkPos[spi * 3] = Math.cos(spa) * spr;
+        sparkPos[spi * 3 + 1] = 0.4 + Math.random() * 5;
+        sparkPos[spi * 3 + 2] = Math.sin(spa) * spr;
+        sparkSeed[spi] = Math.random() * 10;
+      }
+      var sparkGeo = new THREE.BufferGeometry();
+      sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3));
+      var sparks = new THREE.Points(sparkGeo, new THREE.PointsMaterial({
+        size: 0.55, map: sparkTexture(), transparent: true, depthWrite: false,
+        blending: THREE.AdditiveBlending, color: 0xffe9a3, opacity: 0.85
+      }));
+      scene.add(sparks);
+
+      // Burst particles for celebrations
+      var burstCount = 160;
+      var burstPos = new Float32Array(burstCount * 3);
+      var burstVel = [];
+      for (var bui = 0; bui < burstCount; bui++) { burstVel.push(new THREE.Vector3()); burstPos[bui * 3 + 1] = -50; }
+      var burstGeo = new THREE.BufferGeometry();
+      burstGeo.setAttribute('position', new THREE.BufferAttribute(burstPos, 3));
+      var burst = new THREE.Points(burstGeo, new THREE.PointsMaterial({
+        size: 0.7, map: sparkTexture(), transparent: true, depthWrite: false,
+        blending: THREE.AdditiveBlending, color: 0xffcf3f, opacity: 0.95
+      }));
+      scene.add(burst);
+      var burstLife = 0;
+      function fireBurst(x, y, z) {
+        for (var i = 0; i < burstCount; i++) {
+          burstPos[i * 3] = x; burstPos[i * 3 + 1] = y; burstPos[i * 3 + 2] = z;
+          var th = Math.random() * Math.PI * 2, ph = Math.random() * Math.PI;
+          var sp = 3.5 + Math.random() * 5.5;
+          burstVel[i].set(Math.sin(ph) * Math.cos(th) * sp, Math.abs(Math.cos(ph)) * sp * 0.9 + 2, Math.sin(ph) * Math.sin(th) * sp);
+        }
+        burstGeo.attributes.position.needsUpdate = true;
+        burstLife = 1.6;
+      }
+
+      /* ================= Game state ================= */
+      var state = {
+        started: false, finished: false, puzzleOpen: false,
+        keys: 0, stage: 0, // stage 0..2 = station index, 3 = gift
+        opening: false, openT: 0
+      };
+      var player = { x: 0, z: 20, angle: Math.PI, moving: false, walkPhase: 0 };
+      var trail = [];
+      var lastTrailPt = { x: 0, z: 20 };
+      var jain = { x: -2.1, z: 23.2, angle: Math.PI };
+      snata.group.position.set(player.x, 0, player.z);
+      jainab.group.position.set(jain.x, 0, jain.z);
+
+      var clueText = document.getElementById('clueText');
+      var clueStep = document.getElementById('clueStep');
+      var keysText = document.getElementById('keysText');
+      var interactBtn = document.getElementById('interactBtn');
+      var compassArrow = document.getElementById('compassArrow');
+
+      function currentTarget() {
+        if (state.stage < 3) { var s = stations[state.stage]; return { x: s.x, z: s.z }; }
+        return { x: giftPos.x, z: giftPos.z + 3.4 };
+      }
+      function setClue() {
+        if (state.stage < 3) {
+          var s = stations[state.stage];
+          clueStep.textContent = s.step;
+          clueText.textContent = s.clue;
+        } else {
+          clueStep.textContent = 'The Gift!';
+          clueText.textContent = 'You have all 3 keys! Go to the big gift and open it!';
+        }
+      }
+      function updateKeysHUD() {
+        for (var i = 0; i < 3; i++) {
+          document.getElementById('star' + i).setAttribute('class', i < state.keys ? 'starOn' : 'starOff');
+        }
+        keysText.textContent = state.keys + ' / 3 keys';
+      }
+      setClue(); updateKeysHUD();
+
+      /* ================= Input ================= */
+      var keysDown = {};
+      var padHeld = { up: false, down: false, left: false, right: false };
+      window.addEventListener('keydown', function (e) {
+        keysDown[e.key.toLowerCase()] = true;
+        if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].indexOf(e.key.toLowerCase()) >= 0) e.preventDefault();
+        if (!state.started && (e.key === 'Enter' || e.key === ' ')) startGame();
+      });
+      window.addEventListener('keyup', function (e) { keysDown[e.key.toLowerCase()] = false; });
+      function bindPad(id, name) {
+        var el = document.getElementById(id);
+        function on(e) { e.preventDefault(); padHeld[name] = true; el.classList.add('held'); audio(); }
+        function off(e) { if (e) e.preventDefault(); padHeld[name] = false; el.classList.remove('held'); }
+        el.addEventListener('pointerdown', on);
+        el.addEventListener('pointerup', off);
+        el.addEventListener('pointerleave', off);
+        el.addEventListener('pointercancel', off);
+        el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+      }
+      bindPad('padUp', 'up'); bindPad('padDown', 'down'); bindPad('padLeft', 'left'); bindPad('padRight', 'right');
+
+      function moveInput() {
+        var x = 0, z = 0;
+        if (keysDown['arrowup'] || keysDown['w'] || padHeld.up) z -= 1;
+        if (keysDown['arrowdown'] || keysDown['s'] || padHeld.down) z += 1;
+        if (keysDown['arrowleft'] || keysDown['a'] || padHeld.left) x -= 1;
+        if (keysDown['arrowright'] || keysDown['d'] || padHeld.right) x += 1;
+        if (x !== 0 && z !== 0) { x *= 0.7071; z *= 0.7071; }
+        return { x: x, z: z };
+      }
+
+      /* ================= Puzzles ================= */
+      var puzzleOverlay = document.getElementById('puzzleOverlay');
+      var puzzleTitle = document.getElementById('puzzleTitle');
+      var puzzleText = document.getElementById('puzzleText');
+      var watchNote = document.getElementById('watchNote');
+      var puzzleBody = document.getElementById('puzzleBody');
+      var puzzleCard = document.getElementById('puzzleCard');
+      var activeStation = null;
+
+      function openPuzzle(st) {
+        activeStation = st;
+        state.puzzleOpen = true;
+        puzzleOverlay.hidden = false;
+        puzzleCard.classList.remove('shake');
+        if (st.id === 'flowers') buildFlowerPuzzle();
+        else if (st.id === 'pond') buildButterflyPuzzle();
+        else buildCrystalPuzzle();
+      }
+      function closePuzzle() {
+        puzzleOverlay.hidden = true;
+        state.puzzleOpen = false;
+        activeStation = null;
+      }
+      document.getElementById('puzzleClose').addEventListener('click', function () { sndTap(); closePuzzle(); });
+
+      function solvePuzzle() {
+        var st = activeStation;
+        sndKey();
+        closePuzzle();
+        if (st) {
+          st.solved = true;
+          st.key.visible = true;
+          st.ring.material.emissiveIntensity = 0.1;
+          fireBurst(st.x, 2.2, st.z);
+        }
+        state.keys += 1;
+        state.stage += 1;
+        updateKeysHUD();
+        setClue();
+        if (state.stage >= 3) { giftGlow.intensity = 1.6; }
+      }
+      function failFeedback() {
+        sndOops();
+        puzzleCard.classList.remove('shake');
+        void puzzleCard.offsetWidth;
+        puzzleCard.classList.add('shake');
+      }
+
+      // --- Puzzle 1: Rainbow Flowers memory ---
+      function buildFlowerPuzzle() {
+        puzzleTitle.textContent = 'Rainbow Flowers';
+        puzzleText.textContent = 'Watch the flowers glow, then tap them in the same order!';
+        watchNote.textContent = 'Get ready…';
+        puzzleBody.innerHTML = '';
+        var colors = ['#ff5d8f', '#57b6ff', '#51d88a', '#ffb03a'];
+        var row = document.createElement('div'); row.className = 'flowerRow';
+        var btns = [];
+        var busy = true, seq = [], progress = 0;
+        for (var i = 0; i < 3; i++) seq.push(Math.floor(Math.random() * 4));
+        colors.forEach(function (c, idx) {
+          var b = document.createElement('button');
+          b.className = 'flowerBtn'; b.style.background = c;
+          b.setAttribute('aria-label', 'Flower ' + (idx + 1));
+          b.addEventListener('click', function () {
+            if (busy) return;
+            flashBtn(b);
+            sndTap();
+            if (idx === seq[progress]) {
+              progress++;
+              if (progress >= seq.length) { watchNote.textContent = 'You did it! A magic key is yours!'; busy = true; setTimeout(solvePuzzle, 700); }
+              else watchNote.textContent = 'Lovely! ' + (seq.length - progress) + ' more…';
+            } else {
+              failFeedback();
+              watchNote.textContent = 'Oops! Watch again…';
+              busy = true; progress = 0;
+              setTimeout(playSeq, 900);
+            }
+          });
+          row.appendChild(b); btns.push(b);
+        });
+        puzzleBody.appendChild(row);
+        function flashBtn(b) { b.classList.add('lit'); setTimeout(function () { b.classList.remove('lit'); }, 380); }
+        function playSeq() {
+          watchNote.textContent = 'Watch carefully…';
+          seq.forEach(function (sIdx, k) {
+            setTimeout(function () { flashBtn(btns[sIdx]); tone(440 + sIdx * 110, 0, 0.2, 'triangle', 0.13); }, 500 + k * 620);
+          });
+          setTimeout(function () { busy = false; watchNote.textContent = 'Your turn! Tap the flowers!'; }, 500 + seq.length * 620);
+        }
+        setTimeout(playSeq, 650);
+      }
+
+      // --- Puzzle 2: Count the butterflies ---
+      function butterflySVG(color) {
+        return '<svg class="bfly" width="52" height="42" viewBox="0 0 52 42">' +
+          '<ellipse cx="14" cy="14" rx="12" ry="9" fill="' + color + '" transform="rotate(-24 14 14)"/>' +
+          '<ellipse cx="38" cy="14" rx="12" ry="9" fill="' + color + '" transform="rotate(24 38 14)"/>' +
+          '<ellipse cx="17" cy="29" rx="9" ry="7" fill="' + color + '" opacity="0.75" transform="rotate(20 17 29)"/>' +
+          '<ellipse cx="35" cy="29" rx="9" ry="7" fill="' + color + '" opacity="0.75" transform="rotate(-20 35 29)"/>' +
+          '<ellipse cx="26" cy="21" rx="3.4" ry="10" fill="#4a2c14"/></svg>';
+      }
+      function buildButterflyPuzzle() {
+        puzzleTitle.textContent = 'Butterfly Pond';
+        var count = 4 + Math.floor(Math.random() * 4); // 4..7
+        puzzleText.textContent = 'How many butterflies are dancing over the pond? Count carefully!';
+        watchNote.textContent = '';
+        puzzleBody.innerHTML = '';
+        var field = document.createElement('div'); field.id = 'butterflyField';
+        var cols = ['#ff5d8f', '#ffb03a', '#9b6bff', '#38b6e3', '#51d88a', '#ff6b6b', '#f06292'];
+        for (var i = 0; i < count; i++) {
+          var holder = document.createElement('div');
+          holder.innerHTML = butterflySVG(cols[i % cols.length]);
+          holder.firstChild.style.animationDelay = (i * 0.22) + 's';
+          field.appendChild(holder);
+        }
+        puzzleBody.appendChild(field);
+        var row = document.createElement('div'); row.className = 'numRow';
+        var options = [count - 1, count, count + 1].sort(function () { return Math.random() - 0.5; });
+        options.forEach(function (n) {
+          var b = document.createElement('button');
+          b.className = 'numBtn'; b.textContent = n;
+          b.addEventListener('click', function () {
+            if (n === count) { watchNote.textContent = 'That is right — ' + count + ' butterflies!'; sndGood(); setTimeout(solvePuzzle, 650); }
+            else { failFeedback(); watchNote.textContent = 'Not quite — count them one by one!'; }
+          });
+          row.appendChild(b);
+        });
+        puzzleBody.appendChild(row);
+      }
+
+      // --- Puzzle 3: Crystal colour riddle ---
+      function buildCrystalPuzzle() {
+        puzzleTitle.textContent = 'Crystal Arch';
+        puzzleText.textContent = 'The arch whispers a riddle: "I am the colour of the sky on a sunny day." Tap the right crystal!';
+        watchNote.textContent = '';
+        puzzleBody.innerHTML = '';
+        var row = document.createElement('div'); row.className = 'crystalRow';
+        var defs = [
+          { name: 'Sky Blue', color: '#38b6e3', right: true },
+          { name: 'Rose Pink', color: '#ff5d8f', right: false },
+          { name: 'Leaf Green', color: '#51d88a', right: false },
+          { name: 'Sunny Yellow', color: '#ffcf3f', right: false }
+        ].sort(function () { return Math.random() - 0.5; });
+        defs.forEach(function (d) {
+          var b = document.createElement('button');
+          b.className = 'crystalBtn'; b.setAttribute('aria-label', d.name + ' crystal');
+          var gem = document.createElement('span'); gem.className = 'gem'; gem.style.background = d.color;
+          b.appendChild(gem);
+          b.addEventListener('click', function () {
+            b.classList.add('lit');
+            setTimeout(function () { b.classList.remove('lit'); }, 350);
+            if (d.right) { watchNote.textContent = 'Yes! Sky blue! The last key is yours!'; sndGood(); setTimeout(solvePuzzle, 650); }
+            else { failFeedback(); watchNote.textContent = 'Hmm, that is ' + d.name.toLowerCase() + '. Think of the sky!'; }
+          });
+          row.appendChild(b);
+        });
+        puzzleBody.appendChild(row);
+      }
+
+      /* ================= Interact / gift ================= */
+      function nearStation() {
+        if (state.stage >= 3) return null;
+        var s = stations[state.stage];
+        var d = Math.hypot(player.x - s.x, player.z - s.z);
+        return d < 3.6 ? s : null;
+      }
+      function nearGift() {
+        return Math.hypot(player.x - giftPos.x, player.z - (giftPos.z + 3.4)) < 4.2;
+      }
+      interactBtn.addEventListener('click', function () {
+        if (state.stage < 3) {
+          var s = nearStation();
+          if (s) { audio(); sndTap(); openPuzzle(s); }
+        } else if (nearGift() && !state.opening && !state.finished) {
+          openGift();
+        }
+      });
+
+      var giftOverlay = document.getElementById('giftOverlay');
+      function openGift() {
+        state.opening = true;
+        state.openT = 0;
+        sndGift();
+        fireBurst(giftPos.x, 3.4, giftPos.z);
+        setTimeout(function () { fireBurst(giftPos.x, 3.8, giftPos.z); }, 450);
+        setTimeout(function () {
+          state.finished = true;
+          giftOverlay.hidden = false;
+        }, 1900);
+      }
+
+      // Stark's message slot (edited in-page, shown inside the gift)
+      var starkSlotText = document.getElementById('starkText');
+      var starkEdit = document.getElementById('starkEdit');
+      var starkEditBtn = document.getElementById('starkEditBtn');
+      starkEditBtn.addEventListener('click', function () {
+        starkEdit.hidden = false;
+        starkEditBtn.hidden = true;
+        document.getElementById('starkInput').focus();
+      });
+      document.getElementById('starkSave').addEventListener('click', function () {
+        var v = document.getElementById('starkInput').value.trim();
+        if (v) { starkSlotText.textContent = v; sndGood(); }
+        starkEdit.hidden = true;
+        starkEditBtn.hidden = false;
+        starkEditBtn.textContent = 'Edit Stark\'s Message';
+      });
+
+      /* ================= Start / reset ================= */
+      function startGame() {
+        if (state.started) return;
+        audio(); sndGood();
+        state.started = true;
+        document.getElementById('startOverlay').hidden = true;
+      }
+      document.getElementById('startBtn').addEventListener('click', startGame);
+      document.getElementById('againBtn').addEventListener('click', function () {
+        sndTap();
+        // full reset
+        state.keys = 0; state.stage = 0; state.finished = false; state.opening = false; state.openT = 0;
+        stations.forEach(function (s) { s.solved = false; s.key.visible = false; s.ring.material.emissiveIntensity = 0.55; });
+        player.x = 0; player.z = 20; player.angle = Math.PI;
+        jain.x = -2.1; jain.z = 23.2; trail = []; lastTrailPt = { x: 0, z: 20 };
+        lidGroup.rotation.z = 0; lidGroup.position.y = 1.5;
+        giftGlow.intensity = 0;
+        giftOverlay.hidden = true;
+        updateKeysHUD(); setClue();
+      });
+
+      /* ================= Main loop ================= */
+      var lastNow = performance.now();
+      var elapsed = 0;
+      var camPos = new THREE.Vector3(0, 10, 34);
+      var SPEED = 7.2;
+
+      function step() {
+        requestAnimationFrame(step);
+        var nowMs = performance.now();
+        var dt = Math.min((nowMs - lastNow) / 1000, 0.05);
+        lastNow = nowMs;
+        elapsed += dt;
+        var t = elapsed;
+        try {
+          var mv = (state.started && !state.puzzleOpen && !state.finished) ? moveInput() : { x: 0, z: 0 };
+          player.moving = (mv.x !== 0 || mv.z !== 0);
+          if (player.moving) {
+            player.x += mv.x * SPEED * dt;
+            player.z += mv.z * SPEED * dt;
+            var rr = Math.hypot(player.x, player.z);
+            if (rr > WORLD_R) { player.x *= WORLD_R / rr; player.z *= WORLD_R / rr; }
+            obstacles.forEach(function (o) {
+              var dx = player.x - o.x, dz = player.z - o.z;
+              var d = Math.hypot(dx, dz), min = o.r + 0.55;
+              if (d < min && d > 0.001) { player.x = o.x + dx / d * min; player.z = o.z + dz / d * min; }
+            });
+            var targetAngle = Math.atan2(mv.x, mv.z);
+            var diff = targetAngle - player.angle;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            player.angle += diff * Math.min(1, dt * 12);
+            player.walkPhase += dt * 11;
+          }
+          snata.group.position.set(player.x, player.moving ? Math.abs(Math.sin(player.walkPhase)) * 0.12 : Math.sin(t * 2) * 0.03, player.z);
+          snata.group.rotation.y = player.angle;
+          snata.arms.forEach(function (arm, i) {
+            arm.rotation.x = player.moving ? Math.sin(player.walkPhase + (i ? Math.PI : 0)) * 0.65 : Math.sin(t * 2 + i) * 0.07;
+          });
+          snata.label.position.y = 3.15 + Math.sin(t * 2.4) * 0.05;
+
+          // Jainab follows the trail — record a point only every 0.25 units
+          // of travel, so she trails ~2.2 units behind instead of bunching up.
+          if (Math.hypot(player.x - lastTrailPt.x, player.z - lastTrailPt.z) > 0.25) {
+            trail.push({ x: player.x, z: player.z });
+            lastTrailPt = { x: player.x, z: player.z };
+            if (trail.length > 120) trail.shift();
+          }
+          var followPt = trail.length > 9 ? trail[trail.length - 10] : { x: -2.1, z: 23.2 };
+          var jdx = followPt.x - jain.x, jdz = followPt.z - jain.z;
+          var jd = Math.hypot(jdx, jdz);
+          var jMoving = jd > 0.15;
+          if (jMoving) {
+            var jStep = Math.min(jd, SPEED * 0.98 * dt);
+            jain.x += (jdx / jd) * jStep; jain.z += (jdz / jd) * jStep;
+            var jTarget = Math.atan2(jdx, jdz);
+            var jDiff = jTarget - jain.angle;
+            while (jDiff > Math.PI) jDiff -= Math.PI * 2;
+            while (jDiff < -Math.PI) jDiff += Math.PI * 2;
+            jain.angle += jDiff * Math.min(1, dt * 10);
+          }
+          jainab.group.position.set(jain.x, jMoving ? Math.abs(Math.sin(player.walkPhase * 0.95 + 1)) * 0.1 : Math.sin(t * 2 + 2) * 0.03, jain.z);
+          jainab.group.rotation.y = jain.angle;
+          jainab.arms.forEach(function (arm, i) {
+            arm.rotation.x = jMoving ? Math.sin(player.walkPhase * 0.95 + 1 + (i ? Math.PI : 0)) * 0.6 : Math.sin(t * 2 + i + 1) * 0.07;
+          });
+          jainab.label.position.y = 3.15 + Math.sin(t * 2.4 + 1.3) * 0.05;
+
+          // World life
+          clouds.forEach(function (c, i) { c.position.x += dt * (0.25 + i * 0.05); if (c.position.x > 55) c.position.x = -55; });
+          bflies.forEach(function (bf, i) {
+            bf.g.position.x = bf.cx + Math.sin(t * 0.7 + bf.seed) * 1.6;
+            bf.g.position.z = bf.cz + Math.cos(t * 0.55 + bf.seed) * 1.6;
+            bf.g.position.y = 1.5 + Math.sin(t * 2.2 + bf.seed) * 0.35;
+            bf.g.rotation.y = t * 0.7 + bf.seed;
+            bf.g.children.forEach(function (w, wi) { if (wi < 2) w.rotation.y = (wi === 0 ? -1 : 1) * (0.5 + Math.sin(t * 14 + bf.seed) * 0.45); });
+          });
+          var posAttr = sparkGeo.attributes.position;
+          for (var spi2 = 0; spi2 < sparkCount; spi2++) {
+            posAttr.array[spi2 * 3 + 1] = 0.4 + ((sparkSeed[spi2] * 1.7 + t * 0.35) % 5);
+          }
+          posAttr.needsUpdate = true;
+          stations.forEach(function (s) {
+            if (s.key.visible) { s.key.rotation.y += dt * 1.6; s.key.position.y = 2.1 + Math.sin(t * 2.4) * 0.18; }
+            if (!s.solved) s.ring.scale.setScalar(1 + Math.sin(t * 3) * 0.05);
+          });
+          gift.rotation.y = Math.sin(t * 0.6) * 0.06;
+          if (state.stage >= 3 && !state.finished) giftGlow.intensity = 1.3 + Math.sin(t * 3.2) * 0.5;
+
+          // Beacon + compass
+          var tgt = currentTarget();
+          beacon.position.set(tgt.x, 0, tgt.z);
+          beamMat.opacity = 0.26 + Math.sin(t * 2.6) * 0.08;
+          beaconRing.scale.setScalar(1 + Math.sin(t * 3) * 0.08);
+          var angTo = Math.atan2(tgt.x - player.x, -(tgt.z - player.z));
+          compassArrow.style.transform = 'rotate(' + (angTo * 180 / Math.PI) + 'deg)';
+
+          // Interact button visibility
+          if (state.started && !state.puzzleOpen && !state.finished) {
+            if (state.stage < 3) {
+              var ns = nearStation();
+              interactBtn.hidden = !ns;
+              if (ns) interactBtn.textContent = 'Solve the Puzzle!';
+            } else {
+              interactBtn.hidden = !nearGift() || state.opening;
+              interactBtn.textContent = 'Open the Gift!';
+            }
+          } else {
+            interactBtn.hidden = true;
+          }
+
+          // Gift opening animation
+          if (state.opening && !state.finished) {
+            state.openT += dt;
+            var k = Math.min(1, state.openT / 1.4);
+            lidGroup.rotation.z = k * k * 1.9;
+            lidGroup.position.y = 1.5 + Math.sin(k * Math.PI) * 1.1;
+            giftGlow.intensity = 2.5 * k;
+          }
+
+          // Burst particles
+          if (burstLife > 0) {
+            burstLife -= dt;
+            var bp = burstGeo.attributes.position;
+            for (var bui2 = 0; bui2 < burstCount; bui2++) {
+              burstVel[bui2].y -= 4.5 * dt;
+              bp.array[bui2 * 3] += burstVel[bui2].x * dt;
+              bp.array[bui2 * 3 + 1] += burstVel[bui2].y * dt;
+              bp.array[bui2 * 3 + 2] += burstVel[bui2].z * dt;
+              if (bp.array[bui2 * 3 + 1] < 0.1) bp.array[bui2 * 3 + 1] = 0.1;
+            }
+            bp.needsUpdate = true;
+            burst.material.opacity = Math.max(0, Math.min(0.95, burstLife));
+          }
+
+          // Camera follow
+          var desired = new THREE.Vector3(player.x * 0.82, 10.5, player.z + 14.5);
+          camPos.lerp(desired, Math.min(1, dt * 3.2));
+          camera.position.copy(camPos);
+          camera.lookAt(player.x * 0.92, 1.4, player.z - 3.5);
+
+          renderer.render(scene, camera);
+        } catch (err) {
+          var b = document.getElementById('errBox');
+          b.style.display = 'block';
+          b.textContent = 'Oops! Something went wrong: ' + err.message;
+        }
+      }
+      step();
+
+      window.addEventListener('resize', function () {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        fitPixelRatio();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<link rel="icon" href="data:," />
+<title>Snata'r Birthday Escape Room — Tarek er Surprise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,800;1,600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0c090e; --bg2:#151019; --panel:#1c1522; --panel2:#241a2e;
+    --ink:#f5ece6; --muted:#c9b8b0; --faint:#9b8a90;
+    --rose:#ff5a76; --rose-deep:#d92644; --gold:#eec27a; --gold-dim:#a97f3d;
+    --line:#3a2c40; --ok:#7be0a3; --bad:#ff7a6b;
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Outfit",system-ui,sans-serif; font-size:17px; line-height:1.6;
+    min-height:100vh; overflow-x:hidden;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:radial-gradient(120% 90% at 50% 0%, transparent 55%, rgba(0,0,0,.55) 100%);
+  }
+  h1,h2,h3{font-family:"Playfair Display",serif; line-height:1.15; margin:0}
+  button{font-family:inherit; cursor:pointer}
+  input,select,textarea{font-family:inherit}
+  .wrap{position:relative; z-index:1; max-width:880px; margin:0 auto; padding:20px 16px 64px}
+
+  /* floating hearts */
+  .float-heart{position:fixed; bottom:-30px; z-index:0; color:var(--rose); opacity:0; pointer-events:none; animation:rise linear infinite}
+  @keyframes rise{0%{transform:translateY(0) rotate(-6deg); opacity:0}12%{opacity:.5}100%{transform:translateY(-105vh) rotate(10deg); opacity:0}}
+  @media (prefers-reduced-motion: reduce){ .float-heart{display:none} *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+
+  /* ---------- INTRO ---------- */
+  .hero{border-radius:24px; overflow:hidden; border:1px solid var(--line); position:relative; background:var(--bg2)}
+  .hero img{width:100%; height:340px; object-fit:cover; display:block}
+  .hero::after{content:""; position:absolute; inset:0; background:linear-gradient(to top, rgba(10,6,12,.92) 8%, rgba(10,6,12,.25) 55%, transparent)}
+  .hero-text{position:absolute; left:0; right:0; bottom:0; padding:26px 24px 22px; z-index:2}
+  .hero-text .for{color:var(--gold); font-weight:600; letter-spacing:.14em; text-transform:uppercase; font-size:.78rem}
+  .hero-text h1{font-size:clamp(2rem,6vw,3.1rem); font-weight:800; margin:.25em 0 .2em}
+  .hero-text h1 em{color:var(--rose); font-style:italic}
+  .hero-text p{color:#ead9d2; max-width:56ch; margin:0}
+  .intro-card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:22px; margin-top:18px}
+  .intro-card h2{font-size:1.35rem; margin-bottom:8px}
+  .story{color:var(--muted)}
+  .story strong{color:var(--ink)}
+  .howto{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:16px}
+  .howto div{background:var(--panel2); border:1px solid var(--line); border-radius:14px; padding:14px}
+  .howto b{display:block; color:var(--gold); margin-bottom:4px; font-size:.95rem}
+  .howto span{color:var(--muted); font-size:.92rem}
+  .roomlist{margin:16px 0 0; padding:0; list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:8px 18px}
+  .roomlist li{color:var(--muted); font-size:.95rem; border-bottom:1px dashed var(--line); padding:6px 0; display:flex; gap:10px}
+  .roomlist li b{color:var(--rose); font-family:"Playfair Display",serif}
+  .btn{
+    display:inline-flex; align-items:center; gap:10px; border:0; border-radius:999px;
+    background:var(--rose-deep); color:#fff; font-weight:700; font-size:1.05rem;
+    padding:15px 30px; box-shadow:0 10px 28px rgba(217,38,68,.35); transition:transform .15s, background .15s;
+  }
+  .btn:hover{background:#e83255; transform:translateY(-1px)}
+  .btn:active{transform:scale(.98)}
+  .btn.gold{background:var(--gold); color:#2a1c05; box-shadow:0 10px 28px rgba(238,194,122,.25)}
+  .btn.ghostbtn{background:transparent; color:var(--muted); border:1px solid var(--line); box-shadow:none; font-weight:600}
+  .btn.small{padding:10px 18px; font-size:.95rem}
+  .center{text-align:center}
+  .mt{margin-top:20px}
+
+  /* ---------- HUD ---------- */
+  #view-game{display:none}
+  .hud{position:sticky; top:10px; z-index:20; background:rgba(21,16,25,.92); backdrop-filter:blur(8px);
+    border:1px solid var(--line); border-radius:16px; padding:12px 16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap}
+  .hud .roomno{font-family:"Playfair Display",serif; font-weight:800; font-size:1.05rem; white-space:nowrap}
+  .hud .roomno span{color:var(--rose)}
+  .segs{display:flex; gap:4px; flex:1; min-width:120px}
+  .segs i{flex:1; height:8px; border-radius:99px; background:#332639; display:block}
+  .segs i.done{background:var(--rose)}
+  .segs i.now{background:var(--gold); animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{50%{opacity:.45}}
+  .hud .stat{color:var(--muted); font-size:.92rem; white-space:nowrap}
+  .hud .stat b{color:var(--gold)}
+  .iconbtn{background:var(--panel2); border:1px solid var(--line); color:var(--ink); border-radius:10px; padding:7px 12px; font-size:.88rem; font-weight:600}
+
+  /* ---------- ROOMS ---------- */
+  .room{display:none; margin-top:18px; background:var(--panel); border:1px solid var(--line); border-radius:22px; overflow:hidden}
+  .room.active{display:block; animation:roomIn .5s ease both}
+  @keyframes roomIn{from{opacity:0; transform:translateY(14px)} to{opacity:1; transform:none}}
+  .room-head{padding:24px 24px 0}
+  .room-tag{color:var(--gold); font-size:.78rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase}
+  .room-head h2{font-size:clamp(1.5rem,4.5vw,2rem); margin:.2em 0 .35em}
+  .room-head h2 em{color:var(--rose); font-style:italic}
+  .room-story{color:var(--muted); max-width:62ch}
+  .room-story strong{color:var(--ink)}
+  .scene{margin:18px 24px 0; border-radius:16px; border:1px solid var(--line); background:
+    radial-gradient(90% 140% at 50% -20%, #3a2030 0%, #1d1424 55%, #130d18 100%);
+    padding:20px; position:relative; overflow:hidden}
+  .scene::before{content:""; position:absolute; inset:0; background:radial-gradient(240px 120px at 50% 0%, rgba(238,194,122,.14), transparent 70%); pointer-events:none}
+  .puzzle{padding:20px 24px 26px}
+  .clue{background:#120d17; border:1px dashed var(--gold-dim); border-radius:14px; padding:14px 16px; color:#f0d9ae; font-size:.98rem}
+  .clue b{color:var(--gold)}
+  .feedback{min-height:1.5em; margin-top:12px; font-weight:600}
+  .feedback.bad{color:var(--bad)} .feedback.good{color:var(--ok)}
+  .shake{animation:shake .45s ease}
+  @keyframes shake{0%,100%{transform:none}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+  .hintbox{display:none; margin-top:12px; background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:12px 14px; color:var(--muted); font-size:.95rem}
+  .hintbox.show{display:block}
+  .rowflex{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+  .txtin{
+    background:#0f0a13; border:1px solid var(--line); color:var(--ink); border-radius:12px;
+    padding:13px 16px; font-size:1.1rem; width:100%; max-width:340px; outline:none;
+  }
+  .txtin:focus{border-color:var(--rose)}
+  .pin{letter-spacing:.5em; text-align:center; font-weight:700; font-size:1.5rem; max-width:260px}
+  select.txtin{max-width:220px}
+  label.flabel{display:block; color:var(--muted); font-size:.9rem; margin-bottom:6px; font-weight:600}
+
+  .opts{display:grid; gap:10px}
+  .opt{
+    text-align:left; background:var(--panel2); border:1px solid var(--line); color:var(--ink);
+    border-radius:14px; padding:15px 16px; font-size:1rem; font-weight:500; transition:border-color .15s, background .15s;
+  }
+  .opt:hover{border-color:var(--rose)}
+  .opt.picked-wrong{background:#3a1620; border-color:var(--bad)}
+  .opt.picked-right{background:#14301f; border-color:var(--ok)}
+
+  .tiles{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+  .tile{
+    background:var(--panel2); border:1px solid var(--line); border-radius:14px; color:var(--ink);
+    padding:18px 8px; font-size:.95rem; font-weight:600; min-height:86px; transition:transform .12s, border-color .15s;
+  }
+  .tile:hover{border-color:var(--gold-dim)}
+  .tile .tic{font-size:1.5rem; display:block; margin-bottom:4px}
+  .tile.found{background:#3a1424; border-color:var(--rose); color:#ffd7de}
+  .tile.empty{opacity:.55}
+
+  .pads{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
+  .pad{
+    border-radius:16px; border:1px solid var(--line); background:var(--panel2); color:var(--ink);
+    padding:20px 6px; font-size:1.7rem; transition:all .15s;
+  }
+  .pad small{display:block; font-size:.78rem; color:var(--muted); margin-top:4px; font-weight:600}
+  .pad.lit{background:var(--rose-deep); border-color:var(--rose); transform:scale(1.05); box-shadow:0 0 26px rgba(255,90,118,.5)}
+  .pad:disabled{opacity:.85; cursor:wait}
+
+  .chips{display:flex; flex-wrap:wrap; gap:9px}
+  .chip{
+    background:#0f0a13; border:1px solid var(--gold-dim); color:var(--gold); border-radius:999px;
+    padding:10px 18px; font-weight:700; font-size:1rem;
+  }
+  .chip.used{opacity:.3; pointer-events:none}
+  .sentence{min-height:56px; background:#120d17; border:1px dashed var(--line); border-radius:12px; padding:12px 14px; color:var(--ink); font-size:1.05rem; margin-bottom:14px}
+  .sentence:empty::before{content:"Ekhan e tomar sajano bakko ta asbe…"; color:var(--faint)}
+
+  .ghostflash{
+    position:fixed; inset:0; z-index:60; display:none; place-items:center; pointer-events:none;
+    background:rgba(5,2,8,.55);
+  }
+  .ghostflash.show{display:grid; animation:ghostIn .9s ease both}
+  .ghostflash .g{font-size:5.5rem; filter:drop-shadow(0 0 30px rgba(255,255,255,.5))}
+  .ghostflash p{color:#fff; font-family:"Playfair Display",serif; font-size:1.3rem; text-align:center; padding:0 20px}
+  @keyframes ghostIn{0%{opacity:0; transform:scale(.85)}25%{opacity:1; transform:scale(1.04)}75%{opacity:1}100%{opacity:0; transform:scale(1)}}
+
+  /* ---------- MODAL ---------- */
+  .modal{position:fixed; inset:0; z-index:50; display:none; place-items:center; background:rgba(5,3,8,.72); padding:18px}
+  .modal.show{display:grid}
+  .modal-card{background:var(--panel); border:1px solid var(--rose-deep); border-radius:22px; padding:30px 26px; max-width:460px; width:100%; text-align:center; box-shadow:0 30px 80px rgba(0,0,0,.6); animation:roomIn .35s ease both}
+  .modal-card .big{font-size:2.6rem}
+  .modal-card h3{font-size:1.6rem; margin:.3em 0 .3em}
+  .modal-card p{color:var(--muted); margin:0 0 18px}
+
+  /* ---------- FINAL ---------- */
+  #view-final{display:none}
+  .final-hero{text-align:center; padding:36px 20px 8px}
+  .final-hero .cake{font-size:4rem}
+  .final-hero h2{font-size:clamp(2rem,6vw,3rem)}
+  .final-hero h2 em{color:var(--rose); font-style:italic}
+  .final-hero p{color:var(--muted); max-width:58ch; margin:10px auto 0}
+  .final-grid{display:grid; gap:18px; margin-top:26px}
+  .slot{background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:22px}
+  .slot h3{font-size:1.3rem; margin-bottom:6px}
+  .slot h3 span{color:var(--rose)}
+  .slot .sub{color:var(--muted); font-size:.95rem; margin:0 0 14px}
+  .msg-view{
+    background:#120d17; border:1px solid var(--line); border-radius:14px; padding:20px;
+    font-family:"Playfair Display",serif; font-style:italic; font-size:1.15rem; line-height:1.7; color:#f3e3da;
+    white-space:pre-wrap; min-height:110px;
+  }
+  .msg-view.placeholder{color:var(--faint); font-family:"Outfit",sans-serif; font-style:normal; font-size:1rem}
+  .photo-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+  .photo-frame{
+    border:2px dashed var(--gold-dim); border-radius:16px; min-height:170px; display:grid; place-items:center;
+    text-align:center; padding:14px; color:var(--faint); background:#120d17; overflow:hidden;
+  }
+  .photo-frame img{width:100%; height:100%; max-height:300px; object-fit:cover; border-radius:10px; display:block}
+  .photo-frame.filled{border-style:solid; border-color:var(--line); padding:0}
+  .photo-frame .ph-ic{font-size:2rem; display:block; margin-bottom:6px}
+  .gift-frame{min-height:230px}
+  .editbar{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:26px}
+  #edit-panel{display:none; margin-top:18px; background:var(--panel2); border:1px solid var(--gold-dim); border-radius:20px; padding:22px}
+  #edit-panel.show{display:block}
+  #edit-panel h3{font-size:1.25rem; margin-bottom:4px}
+  #edit-panel p{color:var(--muted); font-size:.94rem}
+  #edit-panel textarea{width:100%; min-height:120px; background:#0f0a13; border:1px solid var(--line); color:var(--ink); border-radius:12px; padding:13px 15px; font-size:1rem; outline:none; resize:vertical}
+  .filein{display:block; margin:6px 0 14px; color:var(--muted)}
+  .countdown{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:18px}
+  .countdown div{background:var(--panel); border:1px solid var(--line); border-radius:14px; min-width:76px; padding:12px 8px; text-align:center}
+  .countdown b{display:block; font-size:1.5rem; font-family:"Playfair Display",serif; color:var(--gold)}
+  .countdown span{color:var(--faint); font-size:.8rem; text-transform:uppercase; letter-spacing:.08em}
+  .confetti-heart{position:fixed; top:-24px; z-index:70; pointer-events:none; animation:fall linear forwards}
+  @keyframes fall{to{transform:translateY(108vh) rotate(320deg)}}
+  footer{color:var(--faint); text-align:center; font-size:.9rem; margin-top:36px}
+
+  @media (max-width:640px){
+    .howto{grid-template-columns:1fr}
+    .roomlist{grid-template-columns:1fr}
+    .photo-grid{grid-template-columns:1fr}
+    .photo-frame{min-height:150px}
+    .pads{grid-template-columns:repeat(2,1fr)}
+    .hero img{height:430px}
+    .room-head,.puzzle{padding-left:18px; padding-right:18px}
+    .scene{margin-left:18px; margin-right:18px}
+    .hud{gap:8px}
+  }
+</style>
+</head>
+<body>
+<div class="ghostflash" id="ghostflash" aria-hidden="true"><div><div class="g center">👻</div><p id="ghost-text">Boo!</p></div></div>
+
+<div class="wrap">
+
+  <!-- ============ INTRO ============ -->
+  <section id="view-intro">
+    <div class="hero">
+      <img src="assets/hero.webp" alt="Golap ar mombati diye sajano ekta purono barir bondho dorja, bhetore birthday cake er alo dekha jachhe" />
+      <div class="hero-text">
+        <div class="for">Snata'r jonno ekta surprise · 23 December</div>
+        <h1>The Haunted <em>Love</em> House</h1>
+        <p>Ekta romantic + horror escape room adventure — 10 ta room, 10 ta tala, ar shesh room e lukano tomar birthday surprise.</p>
+      </div>
+    </div>
+
+    <div class="intro-card">
+      <h2>📜 Golpo ta shuno, Snata…</h2>
+      <p class="story">
+        Birthday'r ager raat e tumi ghum theke jege dekhla — tumi ekta <strong>purono, andhokar barite</strong> atka pore gecho.
+        Charpashe shudhu mombatir alo, golaper gondho, ar majhe majhe kar jeno <strong>fusfus kore bola kotha</strong>…
+        Kintu bhoy peyo na. Prottek room er deyal e <strong>Tarek</strong> tomar jonno clue rekhe geche — karon ei bari ta ashole
+        sajano hoise <strong>tomader bhalobasha diye</strong>. Prottek ta tala khulle ekta kore tomader smriti beriye asbe,
+        ar shesh room e opekkha korche tomar <strong>birthday surprise</strong>.
+      </p>
+      <div class="howto">
+        <div><b>🔍 Clue khujo</b><span>Prottek room er golpo ta mon diye poro — uttor ta golper bhetorei lukano ache.</span></div>
+        <div><b>💡 Hint ache</b><span>Atke gele "Hint nao" button e chap dao. Bhoy er kichu nai, Tarek sob somoy pashe ache.</span></div>
+        <div><b>❤️ Heart jomao</b><span>Prottek room par hole ekta kore heart paba. 10 ta heart holei shesh dorja khulbe.</span></div>
+      </div>
+      <ol class="roomlist">
+        <li><b>01</b> Bondho Dorjar Room</li>
+        <li><b>02</b> Prothom Dekhar Room</li>
+        <li><b>03</b> Andhokar Corridor</li>
+        <li><b>04</b> Bhoyonkor Ayna Room</li>
+        <li><b>05</b> Rokto Golap Bagan</li>
+        <li><b>06</b> Piano Room</li>
+        <li><b>07</b> Vuture Library</li>
+        <li><b>08</b> Ghori Tower</li>
+        <li><b>09</b> Chithir Room</li>
+        <li><b>10</b> Shesh Vault — Birthday Surprise</li>
+      </ol>
+      <div class="center mt">
+        <button class="btn" id="btn-start" type="button">🚪 &nbsp;Bari te Dhuko — Game Shuru</button>
+        <p style="color:var(--faint); font-size:.9rem; margin-top:12px">Headphone porle bhoy + moja — dutoi beshi lagbe 🎧</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GAME ============ -->
+  <section id="view-game">
+    <div class="hud">
+      <div class="roomno">Room <span id="hud-room">1</span> / 10</div>
+      <div class="segs" id="segs" aria-hidden="true"></div>
+      <div class="stat">❤️ <b id="hud-hearts">0</b> heart</div>
+      <div class="stat">⏱️ <b id="hud-time">00:00</b></div>
+      <button class="iconbtn" id="btn-sound" type="button" aria-label="Sound on/off">🔇 Sound Off</button>
+      <button class="iconbtn" id="btn-restart" type="button">↺ Restart</button>
+    </div>
+    <div id="rooms"></div>
+  </section>
+
+  <!-- ============ FINAL ============ -->
+  <section id="view-final">
+    <div class="final-hero">
+      <div class="cake">🎂</div>
+      <h2>Happy Birthday, <em>Snata!</em> 🎉</h2>
+      <p>Tumi perecho! 10 ta room er 10 ta tala khule tumi beriye eshecho — ar ei nao, Tarek er torof theke tomar jonno sajano shesh surprise ta.</p>
+      <div class="countdown" id="countdown" aria-label="Birthday countdown"></div>
+      <p style="color:var(--faint); font-size:.92rem" id="final-time"></p>
+    </div>
+
+    <div class="final-grid">
+      <div class="slot">
+        <h3>💌 Tarek er <span>Message</span> Tomar Jonno</h3>
+        <p class="sub">Ei jayga ta Tarek er nijer lekha message er jonno rakha hoise.</p>
+        <div class="msg-view placeholder" id="gift-message-view">✍️ Tarek ekhane Snata'r jonno nijer moner kotha likhbe…
+Message ta ekhono ashe nai — Tarek pathalei ekhane boshe jabe.</div>
+      </div>
+
+      <div class="slot">
+        <h3>🎁 Tomar <span>Gift</span></h3>
+        <p class="sub">Tarek tomar jonno je gift ta kineche / baniyeche, tar chhobi ta ekhane thakbe.</p>
+        <div class="photo-grid" style="grid-template-columns:1fr">
+          <div class="photo-frame gift-frame" id="gift-photo-view"><span><span class="ph-ic">🎁</span>Gift er chhobi ekhane asbe<br /><small>Tarek chhobi pathalei ekhane dekhte paba</small></span></div>
+        </div>
+      </div>
+
+      <div class="slot">
+        <h3>📸 Tarek <span>&amp;</span> Snata</h3>
+        <p class="sub">Tomader dujoner priyo chhobi gula ekhane sajano thakbe.</p>
+        <div class="photo-grid" id="couple-photos-view">
+          <div class="photo-frame"><span><span class="ph-ic">🖼️</span>Chhobi 1<br /><small>Tomader chhobi ekhane asbe</small></span></div>
+          <div class="photo-frame"><span><span class="ph-ic">🖼️</span>Chhobi 2<br /><small>Tomader chhobi ekhane asbe</small></span></div>
+          <div class="photo-frame"><span><span class="ph-ic">🖼️</span>Chhobi 3<br /><small>Tomader chhobi ekhane asbe</small></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="editbar">
+      <button class="btn gold small" id="btn-edit-toggle" type="button">✏️ Tarek er Edit Mode</button>
+      <button class="btn ghostbtn small" id="btn-replay" type="button">↺ Abar Khelo</button>
+    </div>
+
+    <div id="edit-panel">
+      <h3>✏️ Edit Mode — Sudhu Tarek er jonno</h3>
+      <p>Message likhe ar chhobi choose kore <b>"Preview Dekhao"</b> chap dile final room ta ekhane jevabe sajano hobe, Snata thik sevabei dekhbe. Chhobi gula pore pathale segulao ei jayga gulatei boshe jabe.</p>
+      <label class="flabel" for="edit-message">Tomar lekha message Snata'r jonno</label>
+      <textarea id="edit-message" placeholder="Priyo Snata, …"></textarea>
+      <label class="flabel" for="edit-gift">Gift er chhobi (1 ta)</label>
+      <input class="filein" type="file" id="edit-gift" accept="image/*" />
+      <label class="flabel" for="edit-photos">Tomader dujoner chhobi (3 ta porjonto)</label>
+      <input class="filein" type="file" id="edit-photos" accept="image/*" multiple />
+      <button class="btn small" id="btn-apply-edit" type="button">👀 Preview Dekhao</button>
+      <span id="edit-status" style="color:var(--ok); font-weight:600; margin-left:10px"></span>
+    </div>
+  </section>
+
+  <footer>Made with ❤️ by Tarek — for Snata · Birthday: 23 December</footer>
+</div>
+
+<!-- success modal -->
+<div class="modal" id="modal" role="dialog" aria-modal="true">
+  <div class="modal-card" id="modal-card">
+    <div class="big">🔓❤️</div>
+    <h3 id="modal-title">Dorja Khule Geche!</h3>
+    <p id="modal-text"></p>
+    <button class="btn" id="btn-next" type="button">Porer Room e Jao ➜</button>
+  </div>
+</div>
+<script>
+(function(){
+"use strict";
+var $ = function(id){ return document.getElementById(id); };
+
+/* ---------- sound (Web Audio, in-memory only) ---------- */
+var soundOn = false, actx = null;
+function beep(freq, dur, type, delay){
+  if(!soundOn) return;
+  try{
+    if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)();
+    if(actx.state === "suspended") actx.resume();
+    var o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime + (delay||0);
+    o.type = type||"sine"; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.12, t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+(dur||0.18));
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+(dur||0.18)+0.05);
+  }catch(e){}
+}
+function sfx(name){
+  if(name==="click") beep(660,0.07,"triangle");
+  if(name==="good"){ beep(523,0.16,"sine",0); beep(659,0.16,"sine",0.13); beep(784,0.28,"sine",0.26); }
+  if(name==="bad"){ beep(160,0.3,"sawtooth",0); beep(110,0.35,"sawtooth",0.1); }
+  if(name==="ghost"){ beep(880,0.5,"sine",0); beep(587,0.6,"sine",0.25); }
+}
+
+/* ---------- floating hearts ---------- */
+var heartChars = ["❤","♥","❤"];
+for(var i=0;i<10;i++){
+  var s = document.createElement("span");
+  s.className = "float-heart"; s.textContent = heartChars[i%3];
+  s.style.left = (Math.random()*96)+"vw";
+  s.style.fontSize = (11+Math.random()*13)+"px";
+  s.style.animationDuration = (13+Math.random()*14)+"s";
+  s.style.animationDelay = (Math.random()*14)+"s";
+  document.body.appendChild(s);
+}
+
+/* ---------- game state ---------- */
+var state = { room:1, hearts:0, startedAt:null, timerId:null, seconds:0, solved:{}, finalShown:false };
+
+/* ---------- room data ---------- */
+var ROOMS = [
+{ n:1, tag:"Room 1 · Shurur Dorja", title:"Bondho <em>Dorjar</em> Room",
+  story:"Tumi ekta bishal <strong>kather dorjar</strong> shamne dariye acho. Dorja te ekta purono <strong>4-digit er tala</strong> — pashe deyal e khodai kore lekha: <strong>“Je din ta te ei duniya te sabcheye sundor manush ta eshechilo, sei din tai chabi.”</strong> Bahire theke brishti ar batash er shobdo asche… kintu dorja r opash theke mombatir alo dekha jachhe.",
+  clue:"📌 <b>Clue:</b> Snata'r <b>birthday</b> kobe? Date ar month mile 4 ta digit hobe. Jemon 5 January hole code hoto 0501.",
+  hint:"💡 Hint: Birthday 23 December — tahole date holo 23, ar December holo 12 tomo month. Pasapashi boshao!",
+  type:"pin", answer:"2312", inputLabel:"4-digit code ta likho", placeholder:"••••",
+  success:"Thik bolsila! 23 December — je din ta Tarek er kache bochor er sabcheye special din. Tala khule gelo!" },
+{ n:2, tag:"Room 2 · Prothom Smriti", title:"Prothom <em>Dekhar</em> Room",
+  story:"Dorja khultei tumi ekta chhoto <strong>restaurant er table</strong> er shamne! Table e duita khali cup, ar deyal e ekta purono photo frame — kintu photo ta dhulo te dhaka. Frame er niche lekha: <strong>“Sob golpo ekhan thekei shuru hoisilo…”</strong> Mone koro to Snata, Tarek er sathe tomar prothom dekha hoisilo kothay?",
+  clue:"📌 <b>Clue:</b> Sothik jayga ta bachai koro. Vul jayga bachle bhuter hashi shunte paba!",
+  hint:"💡 Hint: Restaurant tar naam chilo Food City… ar seta chilo ekta khabar er dokan er shamne — Doctor's Food!",
+  type:"quiz",
+  options:[
+    {t:"🏫 College er library te", ok:false},
+    {t:"🍽️ Food City Restaurant e, Doctor's Food er shamne", ok:true},
+    {t:"🌳 Park er bench e", ok:false},
+    {t:"🚌 Bus stand e", ok:false}],
+  success:"Ekdom thik! Food City Restaurant, Doctor's Food er shamne — shei din ta thekei Tarek er duniya ta bodle gesilo. ❤️" },
+{ n:3, tag:"Room 3 · Andhokar Corridor", title:"Andhokar <em>Corridor</em>",
+  story:"Ekta <strong>lomba, ghutghute andhokar corridor</strong>. Tomar hate shudhu ekta <strong>kaptese emon mombati</strong>. Corridor er jinis potro gula r moddhe <strong>3 ta lukano heart</strong> ache — segula na pele samne r dorja khulbe na. Sabdhane… majhe majhe mone hocche keu jeno tomar pichone dariye ache. 👻",
+  clue:"📌 <b>Clue:</b> Prottek ta jinis e chap diye dekho. 3 ta heart khuje ber koro!",
+  hint:"💡 Hint: Heart gula ache — Chithi'r bhetore, Golap er pichone, ar purono Trunk er moddhe.",
+  type:"tiles", need:3,
+  tiles:[
+    {ic:"📖", t:"Purono Boi", heart:false},{ic:"✉️", t:"Chithi", heart:true},{ic:"🪞", t:"Ayna", heart:false},
+    {ic:"🌹", t:"Golap", heart:true},{ic:"🕯️", t:"Mombati", heart:false},{ic:"🗝️", t:"Chabi", heart:false},
+    {ic:"🕰️", t:"Ghori", heart:false},{ic:"🧰", t:"Trunk", heart:true},{ic:"🎭", t:"Porda", heart:false}],
+  ghostAt:3,
+  success:"Peye gecho 3 ta heart! Corridor er seshe r dorja ta nije nijei khule gelo… ke khullo, ke jane? 😱❤️" },
+{ n:4, tag:"Room 4 · Ayna r Ulta Jogot", title:"Bhoyonkor <em>Ayna</em> Room",
+  story:"Room bhorti <strong>purono ayna</strong>. Majhkhan er boro ayna ta te tomar protibimbo ulta hoye ache! Ayna r gaye kuyasha te keu angul diye likheche ulta-palta okkhor gula: <strong>A — A — N — S — T</strong>. Niche chhoto kore lekha: <strong>“Okkhor gula sajalei beriye asbe — jar chhobi Tarek er moner ayna te sob somoy thake.”</strong>",
+  clue:"📌 <b>Clue:</b> A A N S T — ei 5 ta okkhor sajiye ekta naam banao.",
+  hint:"💡 Hint: Naam ta S diye shuru hoy… jake niye ei puro game ta!",
+  type:"text", answer:["SNATA"], inputLabel:"Sajano naam ta likho", placeholder:"Naam ta likho…",
+  success:"SNATA! Ayna ta joljol kore uthlo, ar kuyasha r lekha gula golaper papri hoye jhore porlo. 🌹" },
+{ n:5, tag:"Room 5 · Golap Bagan", title:"Rokto <em>Golap</em> Bagan",
+  story:"Ebar tumi barir pichoner <strong>kuyasha-dhaka golap bagane</strong>. Lal golap gula batashe dulche, ar bagan er gate e ekta <strong>hisab er tala</strong> jhulche. Gate er pashe Tarek er rekhe jawa ekta note: <strong>“Ami protidin tomake 3 ta kore golap dei. 7 din por amar hate thaka golap gulor sathe aro 2 ta special golap jog korlam — mot koyta golap holo tomar jonno?”</strong>",
+  clue:"📌 <b>Clue:</b> Age gun koro (3 × 7), tarpor jog koro (+ 2).",
+  hint:"💡 Hint: 3 × 7 = 21, tar sathe 2 jog korle… mone rekho, ei number ta Snata'r birthday'r date er soman!",
+  type:"text", answer:["23"], inputLabel:"Mot koyta golap?", placeholder:"Number ta likho…", numeric:true,
+  success:"23 ta golap! Thik birthday'r date er motoi. Gate khule gelo, ar golap er papri uriye niye gelo tomake porer room e." },
+{ n:6, tag:"Room 6 · Shurer Room", title:"Vuture <em>Piano</em> Room",
+  story:"Room er majhkhane ekta <strong>dhulo-dhaka piano</strong> — kintu tumi dhuktei piano ta <strong>niJe nijei</strong> bajte shuru korlo! 😱 Piano r upor 4 ta chinno jolche: Heart, Golap, Chaand ar Surela Nota. Bhut ta ekta <strong>sequence</strong> bajiye shonabe — mon diye dekho, tarpor <strong>thik oi order ei</strong> abar bajao.",
+  clue:"📌 <b>Clue:</b> “Sequence Dekho” button chap dao, chinno gula kon order e jole othe mone rakho, tarpor se order e chap dao.",
+  hint:"💡 Hint: Atke gele abar “Sequence Dekho” chap diye dekhte paro — bhut ta raag kore na, o khub romantic bhut!",
+  type:"pads", seq:[0,2,1,3],
+  pads:[{ic:"❤️", t:"Heart"},{ic:"🌹", t:"Golap"},{ic:"🌙", t:"Chaand"},{ic:"🎵", t:"Nota"}],
+  success:"Sur ta miliye gelei piano theke beriye elo ekta chhoto heart-lock er chabi! Bhut ta mone hoy tomader golpo shune khub khushi. 🎹❤️" },
+{ n:7, tag:"Room 7 · Library", title:"Vuture <em>Library</em>",
+  story:"Sar sar boi, jhul, ar ekta <strong>nij theke khule jawa boi</strong>. Boi er pata te kalir lekha kemon jeno <strong>kaptese</strong>: ekta <strong>dhadha</strong> — <strong>“Ami dekhte pai na, dhorteo pari na. Kintu ami thakle ekta manush onno ekjon er jonno puro duniya r sathe lorai korte pare. Tarek protidin Snata ke ja dey, ami ki?”</strong>",
+  clue:"📌 <b>Clue:</b> Ek shobde uttor dao. Bangleesh e likhlei hobe (jemon: bhalobasha).",
+  hint:"💡 Hint: Shobdo ta B / V diye shuru — Tarek er moner sabcheye boro jinish ta Snata'r jonno.",
+  type:"text", answer:["BHALOBASHA","VALOBASHA","BHALOBASA","VALOBASA","LOVE"], inputLabel:"Dhadha r uttor (ek shobdo)", placeholder:"Uttor ta likho…",
+  ghostAt:0,
+  success:"BHALOBASHA! Library r sob boi theke golaper papri beriye elo. Thik ei jinish tai to tomader ekhane ane eneche. 📚❤️" },
+{ n:8, tag:"Room 8 · Ghori Tower", title:"<em>Ghori</em> Tower",
+  story:"Tumi ekhon tower er upore — ekta <strong>bishal ghori</strong>, jeta <strong>bondho hoye geche bohu bochor</strong>. Ghori r niche lekha: <strong>“Je din ta te prithibi r sabcheye sundor din ta ashe, sei din ta ghori te set koro — somoy abar chalu hobe.”</strong> Snata, tomar birthday'r din ta ghori te boshao.",
+  clue:"📌 <b>Clue:</b> Sothik <b>date</b> ar <b>month</b> bachai koro.",
+  hint:"💡 Hint: December mash, ar date ta 23 — prothom room er tala tai chilo ei din ta!",
+  type:"date", day:"23", month:"December",
+  success:"Ding dong! Ghori ta abar chalu holo, ar tower er janala diye baire birthday'r atoshbaji dekhte pela! 🎆" },
+{ n:9, tag:"Room 9 · Chithir Room", title:"<em>Chithir</em> Room",
+  story:"Ekta table e ekta <strong>khola chithi</strong> — kintu chithi r shobdo gula <strong>chhinno-bhhinno</strong> hoye batashe ghurchhe! Chithi te Tarek Snata ke kichu ekta bolte cheyechilo. Shobdo gula <strong>thik order e sajiye</strong> bakko ta pura koro, taholei chithi ta pore jabe.",
+  clue:"📌 <b>Clue:</b> Prothome kar naam asbe bolo to? Tarpor ke, tarpor ki kore… shobdo gula por por chap dao.",
+  hint:"💡 Hint: Shuru ta hobe — “Snata, Tarek tomake…” Baki ta to tumi janoy! ❤️",
+  type:"chips", words:["onek","Snata","valobashe","Tarek","tomake"], order:["Snata","Tarek","tomake","onek","valobashe"],
+  success:"“Snata, Tarek tomake onek valobashe.” — chithi ta porei room ta alo te bhore gelo. Ekta matro dorja baki! 💌" },
+{ n:10, tag:"Room 10 · Shesh Dorja", title:"Shesh <em>Vault</em>",
+  story:"Shesh dorja. Ei dorja r opashei <strong>tomar birthday surprise</strong>. Dorja r tala ta ektu alada — ekhane <strong>ekta gopon code</strong> lagbe, jeta sudhu tumi ar Tarek jano. Tala r gaye lekha: <strong>“Tarek tomake protidin je kotha ta bole (English e, 4 okkhor) + tomar birthday'r code — eksathe, faka jayga chara.”</strong> Bolo Snata, parba to? ❤️",
+  clue:"📌 <b>Clue:</b> Prothom ongsho: LOVE · Ditiyo ongsho: 1st room er 4-digit code ta. Eksathe jora lagao.",
+  hint:"💡 Hint: LOVE + 2312 = purota ek sathe likhe falo, majhkhane kono space diba na.",
+  type:"text", answer:["LOVE2312"], inputLabel:"Shesh gopon code ta likho", placeholder:"Code ta likho…",
+  success:"Vault khule gelo!! 🎂🎉" }
+];
+
+/* ---------- build HUD segments ---------- */
+var segsEl = $("segs");
+for(var si=0; si<10; si++){ var seg=document.createElement("i"); segsEl.appendChild(seg); }
+function renderHUD(){
+  $("hud-room").textContent = state.room;
+  $("hud-hearts").textContent = state.hearts;
+  var kids = segsEl.children;
+  for(var k=0;k<kids.length;k++){
+    kids[k].className = (k < state.room-1 || state.solved[k+1]) ? "done" : (k === state.room-1 ? "now" : "");
+  }
+}
+
+/* ---------- build rooms ---------- */
+var roomsEl = $("rooms");
+ROOMS.forEach(function(r){
+  var art = document.createElement("article");
+  art.className = "room"; art.id = "room-"+r.n;
+  var html = '<div class="room-head"><div class="room-tag">'+r.tag+'</div><h2>'+r.title+'</h2><p class="room-story">'+r.story+'</p></div>';
+  html += '<div class="scene"><div class="clue">'+r.clue+'</div><div class="puzzle-zone"></div></div>';
+  html += '<div class="puzzle"><div class="rowflex"><button class="btn small" type="button" data-act="check">🔓 Tala Kholar Chesta Koro</button>'
+        + '<button class="btn ghostbtn small" type="button" data-act="hint">💡 Hint Nao</button></div>'
+        + '<div class="hintbox">'+r.hint+'</div><div class="feedback" aria-live="polite"></div></div>';
+  art.innerHTML = html;
+  roomsEl.appendChild(art);
+  buildPuzzle(art.querySelector(".puzzle-zone"), r);
+  art.querySelector('[data-act="hint"]').addEventListener("click", function(){
+    art.querySelector(".hintbox").classList.toggle("show"); sfx("click");
+  });
+  art.querySelector('[data-act="check"]').addEventListener("click", function(){ checkRoom(r, art); });
+});
+
+function feedback(art, msg, good){
+  var f = art.querySelector(".feedback");
+  f.textContent = msg; f.className = "feedback " + (good ? "good" : "bad");
+  if(!good){ art.classList.remove("shake"); void art.offsetWidth; art.classList.add("shake"); sfx("bad"); }
+}
+function clearFeedback(art){ var f=art.querySelector(".feedback"); f.textContent=""; f.className="feedback"; }
+
+/* ---------- puzzle builders ---------- */
+function buildPuzzle(zone, r){
+  if(r.type==="pin" || r.type==="text"){
+    zone.innerHTML = '<label class="flabel" for="in-'+r.n+'">'+r.inputLabel+'</label>'
+      + '<input class="txtin'+(r.type==="pin"?" pin":"")+'" id="in-'+r.n+'" type="text" '
+      + (r.numeric ? 'inputmode="numeric" ' : '')
+      + (r.type==="pin" ? 'inputmode="numeric" maxlength="4" autocomplete="off" ' : 'autocomplete="off" ')
+      + 'placeholder="'+r.placeholder+'" />';
+    zone.querySelector("input").addEventListener("keydown", function(e){
+      if(e.key==="Enter"){ var art=document.getElementById("room-"+r.n); checkRoom(r, art); }
+    });
+  }
+  if(r.type==="quiz"){
+    var wrap = document.createElement("div"); wrap.className="opts";
+    r.options.forEach(function(o){
+      var b=document.createElement("button"); b.type="button"; b.className="opt"; b.textContent=o.t;
+      b.setAttribute("data-ok", o.ok ? "1":"0");
+      b.addEventListener("click", function(){
+        sfx("click");
+        wrap.querySelectorAll(".opt").forEach(function(x){ x.classList.remove("picked-right","picked-wrong"); });
+        b.classList.add(o.ok ? "picked-right" : "picked-wrong");
+        b.setAttribute("data-picked","1");
+        wrap.querySelectorAll(".opt").forEach(function(x){ if(x!==b) x.removeAttribute("data-picked"); });
+        var art=document.getElementById("room-"+r.n);
+        if(!o.ok) feedback(art,"👻 Bhuter hashi shona gelo… eta shei jayga na! Abar bhebe dekho.", false);
+        else clearFeedback(art);
+      });
+      wrap.appendChild(b);
+    });
+    zone.appendChild(wrap);
+  }
+  if(r.type==="tiles"){
+    var grid=document.createElement("div"); grid.className="tiles";
+    r.tiles.forEach(function(t){
+      var b=document.createElement("button"); b.type="button"; b.className="tile";
+      b.innerHTML='<span class="tic">'+t.ic+'</span>'+t.t;
+      b.setAttribute("data-heart", t.heart?"1":"0");
+      b.addEventListener("click", function(){
+        var art=document.getElementById("room-"+r.n);
+        if(b.classList.contains("found")||b.classList.contains("empty")) return;
+        if(t.heart){
+          b.classList.add("found"); b.innerHTML='<span class="tic">❤️</span>Heart Peye Gecho!';
+          r._found=(r._found||0)+1; sfx("good");
+          feedback(art,"❤️ Heart peye gecho! ("+r._found+" / "+r.need+")", true);
+          if(r._found>=r.need) solveRoom(r);
+        } else {
+          b.classList.add("empty"); sfx("ghost");
+          feedback(art,"👻 Ekhane kichu nai… shudhu thanda batash. Onno gula try koro.", false);
+        }
+      });
+      grid.appendChild(b);
+    });
+    zone.appendChild(grid);
+    var note=document.createElement("p"); note.style.color="var(--muted)"; note.style.margin="12px 0 0";
+    note.textContent="👆 Prottek ta jinis e chap diye dekho — 3 ta heart khujo."; zone.appendChild(note);
+  }
+  if(r.type==="pads"){
+    var pads=document.createElement("div"); pads.className="pads";
+    r.pads.forEach(function(p, idx){
+      var b=document.createElement("button"); b.type="button"; b.className="pad"; b.setAttribute("data-idx", idx);
+      b.innerHTML=p.ic+"<small>"+p.t+"</small>";
+      b.addEventListener("click", function(){ padPress(r, idx, pads); });
+      pads.appendChild(b);
+    });
+    zone.appendChild(pads);
+    var row=document.createElement("div"); row.className="rowflex"; row.style.marginTop="14px";
+    row.innerHTML='<button class="btn gold small" type="button">▶ Sequence Dekho</button><span style="color:var(--muted)" class="pad-status">Age sequence ta dekho, tarpor nije bajao.</span>';
+    row.querySelector("button").addEventListener("click", function(){ playSeq(r, pads, row.querySelector(".pad-status")); });
+    zone.appendChild(row);
+    r._padsEl = pads; r._statusEl = row.querySelector(".pad-status"); r._progress = 0; r._playing = false;
+  }
+  if(r.type==="date"){
+    var days="", months=["January","February","March","April","May","June","July","August","September","October","November","December"];
+    days='<option value="">Date bachai koro</option>'; for(var d=1; d<=31; d++) days+='<option value="'+d+'">'+d+'</option>';
+    var mo='<option value="">Month bachai koro</option>'; months.forEach(function(m){ mo+='<option value="'+m+'">'+m+'</option>'; });
+    zone.innerHTML='<div class="rowflex"><div><label class="flabel" for="day-'+r.n+'">Date</label><select class="txtin" id="day-'+r.n+'">'+days+'</select></div>'
+      + '<div><label class="flabel" for="mon-'+r.n+'">Month</label><select class="txtin" id="mon-'+r.n+'">'+mo+'</select></div></div>';
+  }
+  if(r.type==="chips"){
+    zone.innerHTML='<div class="sentence" id="sent-'+r.n+'"></div><div class="chips"></div>'
+      + '<div class="rowflex" style="margin-top:12px"><button class="btn ghostbtn small" type="button" data-act="reset-chips">↺ Abar Sajao</button></div>';
+    var chipsEl=zone.querySelector(".chips"); r._picked=[];
+    r.words.forEach(function(w){
+      var b=document.createElement("button"); b.type="button"; b.className="chip"; b.textContent=w;
+      b.addEventListener("click", function(){
+        b.classList.add("used"); r._picked.push(w); sfx("click");
+        document.getElementById("sent-"+r.n).textContent = r._picked.join(" ");
+      });
+      chipsEl.appendChild(b);
+    });
+    zone.querySelector('[data-act="reset-chips"]').addEventListener("click", function(){
+      r._picked=[]; document.getElementById("sent-"+r.n).textContent="";
+      chipsEl.querySelectorAll(".chip").forEach(function(c){ c.classList.remove("used"); });
+    });
+  }
+}
+
+/* ---------- pads (room 6) ---------- */
+function lightPad(padsEl, idx, ms){
+  var pad = padsEl.querySelector('[data-idx="'+idx+'"]');
+  pad.classList.add("lit"); beep(300+idx*140, 0.25, "sine");
+  setTimeout(function(){ pad.classList.remove("lit"); }, ms||420);
+}
+function playSeq(r, padsEl, statusEl){
+  if(r._playing) return;
+  r._playing = true; r._progress = 0;
+  statusEl.textContent = "👀 Mon diye dekho…";
+  padsEl.querySelectorAll(".pad").forEach(function(p){ p.disabled = true; });
+  r.seq.forEach(function(idx, i){
+    setTimeout(function(){ lightPad(padsEl, idx); }, 650*(i+1));
+  });
+  setTimeout(function(){
+    r._playing = false;
+    padsEl.querySelectorAll(".pad").forEach(function(p){ p.disabled = false; });
+    statusEl.textContent = "🎹 Ebar tomar pala — thik oi order e chap dao!";
+  }, 650*(r.seq.length+1));
+}
+function padPress(r, idx, padsEl){
+  if(r._playing || state.solved[r.n]) return;
+  lightPad(padsEl, idx, 300);
+  if(idx === r.seq[r._progress]){
+    r._progress++;
+    r._statusEl.textContent = "Bhalo hocche… "+r._progress+" / "+r.seq.length;
+    if(r._progress === r.seq.length) solveRoom(r);
+  } else {
+    r._progress = 0; sfx("bad");
+    r._statusEl.textContent = "👻 Bhul sur! Abar “Sequence Dekho” diye shuru koro.";
+    var art=document.getElementById("room-"+r.n);
+    art.classList.remove("shake"); void art.offsetWidth; art.classList.add("shake");
+  }
+}
+
+/* ---------- checking ---------- */
+function norm(v){ return (v||"").toString().trim().toUpperCase().replace(/\s+/g,""); }
+function checkRoom(r, art){
+  if(state.solved[r.n]) return;
+  if(r.type==="pin"){
+    var v = norm($("in-"+r.n).value);
+    if(v === r.answer) solveRoom(r);
+    else feedback(art, v ? "🔒 Tala khullo na… code ta bhul. Clue ta abar poro!" : "Age code ta likho to!", false);
+  }
+  if(r.type==="text"){
+    var v2 = norm($("in-"+r.n).value);
+    var ok = r.answer.some(function(a){ return norm(a) === v2; });
+    if(ok) solveRoom(r);
+    else feedback(art, v2 ? "Hmm, mone hoy thik holo na. Hint niye abar try koro!" : "Age uttor ta likho!", false);
+  }
+  if(r.type==="quiz"){
+    var picked = art.querySelector('.opt[data-picked="1"]');
+    if(picked && picked.getAttribute("data-ok")==="1") solveRoom(r);
+    else if(picked) feedback(art,"👻 Eta shei jayga na! Tomader prothom dekha ta mone koro…", false);
+    else feedback(art,"Age ekta jayga bachai koro!", false);
+  }
+  if(r.type==="tiles"){
+    if((r._found||0) >= r.need) solveRoom(r);
+    else feedback(art,"Ekono "+(r.need-(r._found||0))+" ta heart baki! Corridor er jinis gula khujo.", false);
+  }
+  if(r.type==="pads"){
+    feedback(art,"Piano r sequence ta thik moto bajalei tala khulbe. “Sequence Dekho” chap diye abar dekho!", false);
+  }
+  if(r.type==="date"){
+    var dv = $("day-"+r.n).value, mv = $("mon-"+r.n).value;
+    if(dv===r.day && mv===r.month) solveRoom(r);
+    else if(!dv || !mv) feedback(art,"Date ar month — dutoi bachai koro!", false);
+    else feedback(art,"🕰️ Ghori ta ektu nere abar theme gelo… ei din ta na. Birthday ta mone koro!", false);
+  }
+  if(r.type==="chips"){
+    var joined = (r._picked||[]).join(" ");
+    if(joined === r.order.join(" ")) solveRoom(r);
+    else if((r._picked||[]).length < r.order.length) feedback(art,"Bakko ta ekono pura hoy nai — aro shobdo baki!", false);
+    else feedback(art,"💌 Shobdo gula r order ta mil lo na. “Abar Sajao” diye notun kore try koro!", false);
+  }
+}
+
+/* ---------- solving / navigation ---------- */
+function ghostFlash(text){
+  var g=$("ghostflash"); $("ghost-text").textContent=text;
+  g.classList.remove("show"); void g.offsetWidth; g.classList.add("show"); sfx("ghost");
+  setTimeout(function(){ g.classList.remove("show"); }, 950);
+}
+function showRoom(n){
+  state.room = n;
+  document.querySelectorAll(".room").forEach(function(el){ el.classList.remove("active"); });
+  var el = $("room-"+n); if(el) el.classList.add("active");
+  renderHUD();
+  window.scrollTo({top:0, behavior:"smooth"});
+  var r = ROOMS[n-1];
+  if(r && r.n===3) setTimeout(function(){ ghostFlash("Boo! 👻 Voy payo na Snata — ami sudhu moja korlam!"); }, 1200);
+  if(r && r.n===7) setTimeout(function(){ ghostFlash("Huuu… 👻 Library te ke jeno fusfus korche…"); }, 1200);
+}
+function solveRoom(r){
+  if(state.solved[r.n]) return;
+  state.solved[r.n] = true; state.hearts++;
+  sfx("good"); renderHUD();
+  var art = $("room-"+r.n);
+  feedback(art, "✅ "+r.success, true);
+  if(r.n === 10){ setTimeout(showFinal, 900); return; }
+  $("modal-title").textContent = "Room "+r.n+" Clear! 🔓❤️";
+  $("modal-text").textContent = r.success;
+  $("btn-next").textContent = "Room "+(r.n+1)+" e Jao ➜";
+  setTimeout(function(){ $("modal").classList.add("show"); }, 650);
+}
+var lastSolved = 0;
+var _solveOrig = solveRoom;
+solveRoom = function(r){ lastSolved = r.n; _solveOrig(r); };
+$("btn-next").addEventListener("click", function(){
+  $("modal").classList.remove("show"); sfx("click");
+  showRoom(Math.min(10, lastSolved + 1));
+});
+
+/* ---------- timer ---------- */
+function fmt(sec){ var m=Math.floor(sec/60), s=sec%60; return (m<10?"0":"")+m+":"+(s<10?"0":"")+s; }
+function startTimer(){
+  state.startedAt = Date.now(); state.seconds = 0;
+  if(state.timerId) clearInterval(state.timerId);
+  state.timerId = setInterval(function(){ state.seconds++; $("hud-time").textContent = fmt(state.seconds); }, 1000);
+}
+
+/* ---------- start / restart ---------- */
+function startGame(){
+  $("view-intro").style.display = "none";
+  $("view-final").style.display = "none";
+  $("view-game").style.display = "block";
+  startTimer(); showRoom(1);
+  ghostFlash("Swagotom, Snata… 👻❤️ Voy peyona, Tarek tomar pashei ache.");
+}
+$("btn-start").addEventListener("click", function(){ sfx("click"); startGame(); });
+$("btn-replay").addEventListener("click", function(){ location.reload(); });
+$("btn-restart").addEventListener("click", function(){ location.reload(); });
+$("btn-sound").addEventListener("click", function(){
+  soundOn = !soundOn;
+  this.textContent = soundOn ? "🔊 Sound On" : "🔇 Sound Off";
+  if(soundOn) sfx("good");
+});
+
+/* ---------- final ---------- */
+function confetti(){
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var chars=["❤️","🌹","🎉","✨","💖"];
+  for(var i=0;i<46;i++){
+    var c=document.createElement("span"); c.className="confetti-heart";
+    c.textContent=chars[i%chars.length];
+    c.style.left=(Math.random()*97)+"vw";
+    c.style.fontSize=(14+Math.random()*18)+"px";
+    c.style.animationDuration=(2.4+Math.random()*2.4)+"s";
+    c.style.animationDelay=(Math.random()*0.9)+"s";
+    document.body.appendChild(c);
+    (function(el){ setTimeout(function(){ el.remove(); }, 6500); })(c);
+  }
+}
+function showFinal(){
+  if(state.finalShown) return; state.finalShown = true;
+  if(state.timerId) clearInterval(state.timerId);
+  $("view-game").style.display = "none";
+  $("view-final").style.display = "block";
+  $("final-time").textContent = "⏱️ Tumi sob room par korecho matro "+fmt(state.seconds)+" minute e! Darun, Snata!";
+  window.scrollTo({top:0, behavior:"smooth"});
+  confetti(); sfx("good");
+  updateCountdown();
+}
+function updateCountdown(){
+  var now = new Date();
+  var target = new Date(now.getFullYear(), 11, 23); /* 23 December */
+  if(now > new Date(now.getFullYear(), 11, 24)) target = new Date(now.getFullYear()+1, 11, 23);
+  var diff = target - now;
+  var el = $("countdown");
+  if(now.getMonth()===11 && now.getDate()===23){
+    el.innerHTML = '<div><b>🎂</b><span>Ajkei Birthday!</span></div>';
+    return;
+  }
+  var d = Math.floor(diff/86400000), h = Math.floor(diff%86400000/3600000), m = Math.floor(diff%3600000/60000);
+  el.innerHTML = '<div><b>'+d+'</b><span>Din</span></div><div><b>'+h+'</b><span>Ghonta</span></div><div><b>'+m+'</b><span>Minute</span></div><div><b>23 Dec</b><span>Birthday</span></div>';
+}
+
+/* ---------- edit mode (final room placeholders) ---------- */
+$("btn-edit-toggle").addEventListener("click", function(){
+  $("edit-panel").classList.toggle("show"); sfx("click");
+});
+function setPhotoFrame(el, url){
+  el.classList.add("filled");
+  el.innerHTML = '<img alt="Upload kora chhobi" src="'+url+'" />';
+}
+$("btn-apply-edit").addEventListener("click", function(){
+  var msg = $("edit-message").value.trim();
+  if(msg){
+    var mv = $("gift-message-view");
+    mv.textContent = msg; mv.classList.remove("placeholder");
+  }
+  var giftFile = $("edit-gift").files && $("edit-gift").files[0];
+  if(giftFile) setPhotoFrame($("gift-photo-view"), URL.createObjectURL(giftFile));
+  var photos = $("edit-photos").files;
+  if(photos && photos.length){
+    var grid = $("couple-photos-view"); grid.innerHTML = "";
+    for(var i=0;i<Math.min(3, photos.length);i++){
+      var fr = document.createElement("div"); fr.className="photo-frame";
+      setPhotoFrame(fr, URL.createObjectURL(photos[i]));
+      grid.appendChild(fr);
+    }
+  }
+  $("edit-status").textContent = "✅ Preview update hoye geche! Upar e dekho.";
+  sfx("good");
+  window.scrollTo({top:0, behavior:"smooth"});
+});
+})();
+</script>
+</body>
+</html>
